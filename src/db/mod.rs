@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use crate::models::RssItem;
 use crate::models::schema::rss_item::dsl::*;
-use crate::newsboat_conf_utils;
+use crate::newsboat_utils::conf_utils;
 
 const CACHE_TAG: &str = "cache";
 
@@ -23,7 +23,7 @@ impl QueryManager {
     pub fn get_all_cacheable_feed_items(self) -> Vec<RssItem> {
         let mut cacheable_feed_urls: Vec<String> = vec![];
 
-        for url_conf in newsboat_conf_utils::get_feed_urls_tags().into_iter() {
+        for url_conf in conf_utils::get_feed_urls_tags().into_iter() {
             if url_conf.tags.contains(CACHE_TAG) {
                 cacheable_feed_urls.push(url_conf.feed_url);
             }

@@ -4,4 +4,4 @@ extern crate diesel;
 
 pub mod db;
 pub mod models;
-pub mod newsboat_conf_utils;
+pub mod newsboat_utils;
