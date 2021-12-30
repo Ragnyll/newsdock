@@ -5,7 +5,7 @@ pub mod schema;
 pub struct RssItem {
     id: i32,
     guid: String,
-    title: String,
+    pub title: String,
     author: String,
     url: String,
     feedurl: String,
