@@ -12,7 +12,8 @@ enum DownloadType {
     Youtube,
     #[allow(unused)]
     Webpage,
-    UnsupportedDownloadType,
+    /// The rss_item's is not of a supported type
+    Unsupported,
 }
 
 /// checks if the rss_item exists in the cache and downloads it if it is not
@@ -26,12 +27,15 @@ pub fn poll_cache(rss_item: &RssItem, cache_location: Option<&str>) -> Result<()
 
 /// Downloads the rss content from RssItem.url
 fn download(rss_item: &RssItem) -> Result<(), DownloadError> {
-    let download_base_path = dirs::home_dir().expect("Unable to find home dir").join(super::DEFAULT_CACHE_LOCATION).into_os_string().into_string().expect("unable to build cache path");
+    let download_base_path = dirs::home_dir()
+        .expect("Unable to find home dir")
+        .join(super::DEFAULT_CACHE_LOCATION)
+        .into_os_string()
+        .into_string()
+        .expect("unable to build cache path");
     match determine_download_type(&rss_item.url) {
-        DownloadType::Youtube => {
-            return download_youtube(rss_item, &download_base_path, None);
-        }
-        _ => return Err(DownloadError::UnsupportedDownloadType),
+        DownloadType::Youtube => download_youtube(rss_item, &download_base_path, None),
+        _ => Err(DownloadError::UnsupportedDownloadTypeError),
     }
 }
 
@@ -60,7 +64,7 @@ fn determine_download_type(url: &str) -> DownloadType {
         return DownloadType::Youtube;
     }
 
-    DownloadType::UnsupportedDownloadType
+    DownloadType::Unsupported
 }
 
 #[derive(Error, Debug)]
@@ -68,7 +72,7 @@ pub enum DownloadError {
     #[error("newsdock  was unable to download the given rss_item")]
     DownloadError,
     #[error("The rss_item is of an unspoorted DownloadType")]
-    UnsupportedDownloadType,
+    UnsupportedDownloadTypeError,
     #[error("The video could not be downloaded from youtube")]
     YoutubeDownloadError,
 }
