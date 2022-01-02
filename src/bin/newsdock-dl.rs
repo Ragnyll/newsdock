@@ -28,9 +28,9 @@ fn main() {
     let item_urls = query_manager.get_all_cacheable_feed_items();
 
     for item in item_urls {
-        // TODO: this should be replaced with a logging library later
+        // TODO: this should be replaced with a logging library later instead of potentially
+        // swallowing a result
         let _ = cache::downloader::poll_cache(&item, cache_dir, args.youtube_dl_attempts);
-        break;
     }
 }
 
@@ -40,13 +40,11 @@ fn main() {
 #[readonly::make]
 struct Args {
     /// An optional location for the default cache directory
-    /// Defaults to ".cache/newsdock/"
     #[clap(long, default_value = ".cache/newsdock/")]
     cache_dir: String,
 
     /// An optional override for the location where the newsboat urls file is stored relative to
     /// the home dir
-    /// Defaults to .config/newsboat/urls"
     #[clap(short, long)]
     newsboat_urls_location: Option<String>,
 
