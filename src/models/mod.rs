@@ -2,12 +2,13 @@
 pub mod schema;
 
 #[derive(Queryable, Debug)]
+#[readonly::make]
 pub struct RssItem {
     id: i32,
     guid: String,
-    title: String,
+    pub title: String,
     author: String,
-    url: String,
+    pub url: String,
     feedurl: String,
     pubDate: i32,
     content: String,
