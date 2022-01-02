@@ -22,3 +22,5 @@ jobs:
       run: cargo test --verbose
     - name: Run Style Check
       run: cargo clippy -- -D warnings
+    - name: Check Outdated Dependencies
+      run: cargo install cargo-outdated && cargo outdated | grep "All dependencies are up to date"
