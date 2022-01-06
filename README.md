@@ -16,6 +16,44 @@ _Installation_:
 cargo install
 ```
 
+## Usage
+`newsdock-dl` downloads items from the newsboat config file tagged with `cache` to the newsdock cache dir.
+
+```
+$ newsdock-dl --help
+newsdock 0.1.0
+A utility for downloading rss_items onto local storage
+
+USAGE:
+    newsdock-dl [OPTIONS]
+
+OPTIONS:
+        --cache-db-location <CACHE_DB_LOCATION>
+            An opitonal override for the location where newsboats db is stored relative to the
+            home_dir defaults to "/.local/share/newsboat/cache.db" [default:
+            .local/share/newsboat/cache.db]
+
+        --cache-dir <CACHE_DIR>
+            An optional location for the default cache directory Defaults to ".cache/newsdock/"
+            [default: .cache/newsdock/]
+
+    -h, --help
+            Print help information
+
+    -n, --newsboat-urls-location <NEWSBOAT_URLS_LOCATION>
+            An optional override for the location where the newsboat urls file is stored relative to
+            the home dir Defaults to .config/newsboat/urls"
+
+        --skip-refresh
+            skips the refresh on the newsboatdb
+
+    -V, --version
+            Print version information
+
+        --youtube-dl-attempts <YOUTUBE_DL_ATTEMPTS>
+            The amount of times to retry downloads from youtube [default: 20]
+```
+
 ## How it works
 ![newsdock erd](assets/newsdock_erd.png)
 

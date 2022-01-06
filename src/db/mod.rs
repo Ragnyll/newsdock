@@ -35,6 +35,7 @@ impl QueryManager {
             results.append(
                 &mut rss_item
                     .filter(feedurl.eq(cache_feed_url))
+                    .filter(unread.eq(1))
                     .load::<RssItem>(&self.connection)
                     .unwrap(),
             );

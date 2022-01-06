@@ -4,9 +4,6 @@ use super::cache_file_ops;
 use crate::models::RssItem;
 use thiserror::Error;
 
-/// The Default number of times to retry downloads from youtube
-const DEFAULT_YOUTUBE_RETRIES: u16 = 20;
-
 /// A Meta descriptor to help determine what downloader to use for a given RSS item
 enum DownloadType {
     Youtube,
@@ -17,24 +14,26 @@ enum DownloadType {
 }
 
 /// checks if the rss_item exists in the cache and downloads it if it is not
-pub fn poll_cache(rss_item: &RssItem, cache_location: Option<&str>) -> Result<(), DownloadError> {
+pub fn poll_cache(
+    rss_item: &RssItem,
+    cache_location: &str,
+    youtube_dl_attempts: u32,
+) -> Result<(), DownloadError> {
     if !cache_file_ops::check_cache(&rss_item.title, cache_location) {
-        download(rss_item)?;
+        download(rss_item, cache_location, youtube_dl_attempts)?;
     }
 
     Ok(())
 }
 
 /// Downloads the rss content from RssItem.url
-fn download(rss_item: &RssItem) -> Result<(), DownloadError> {
-    let download_base_path = dirs::home_dir()
-        .expect("Unable to find home dir")
-        .join(super::DEFAULT_CACHE_LOCATION)
-        .into_os_string()
-        .into_string()
-        .expect("unable to build cache path");
+fn download(
+    rss_item: &RssItem,
+    output_dir: &str,
+    youtube_dl_attempts: u32,
+) -> Result<(), DownloadError> {
     match determine_download_type(&rss_item.url) {
-        DownloadType::Youtube => download_youtube(rss_item, &download_base_path, None),
+        DownloadType::Youtube => download_youtube(rss_item, output_dir, youtube_dl_attempts),
         _ => Err(DownloadError::UnsupportedDownloadTypeError),
     }
 }
@@ -43,13 +42,13 @@ fn download(rss_item: &RssItem) -> Result<(), DownloadError> {
 fn download_youtube(
     rss_item: &RssItem,
     download_base_path: &str,
-    num_retries: Option<u16>,
+    num_retries: u32,
 ) -> Result<(), DownloadError> {
     let download_output_path = Path::new(download_base_path).join(&rss_item.title);
     Command::new("youtube-dl")
         .arg(&rss_item.url)
         .arg("--retries")
-        .arg(num_retries.unwrap_or(DEFAULT_YOUTUBE_RETRIES).to_string())
+        .arg(num_retries.to_string())
         .arg("--output")
         .arg(download_output_path)
         .output()
