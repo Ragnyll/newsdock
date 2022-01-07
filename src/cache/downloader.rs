@@ -1,7 +1,9 @@
+use crate::models::RssItem;
+use std::fs::File;
+use std::io::prelude::*;
 use std::process::Command;
 use std::path::Path;
 use super::cache_file_ops;
-use crate::models::RssItem;
 use thiserror::Error;
 
 /// A Meta descriptor to help determine what downloader to use for a given RSS item
@@ -34,17 +36,27 @@ fn download(
 ) -> Result<(), DownloadError> {
     match determine_download_type(&rss_item.url) {
         DownloadType::Youtube => download_youtube(rss_item, output_dir, youtube_dl_attempts),
+        DownloadType::Webpage => download_webpage(rss_item, output_dir),
         _ => Err(DownloadError::UnsupportedDownloadTypeError),
     }
 }
 
-/// downloads the rss item to `{download_base_path}/{rss_item.title}`
+/// Downloads the webpage
+fn download_webpage(rss_item: &RssItem, output_base_path: &str) -> Result<(), DownloadError> {
+    let download_output_path = Path::new(output_base_path).join(format!("{}.html", &rss_item.title));
+    let resp = reqwest::blocking::get(&rss_item.url)?.bytes()?;
+    let mut ofile = File::create(download_output_path)?;
+    ofile.write_all(&resp)?;
+    Ok(())
+}
+
+/// downloads the rss item to `{output_base_path}/{rss_item.title}`
 fn download_youtube(
     rss_item: &RssItem,
-    download_base_path: &str,
+    output_base_path: &str,
     num_retries: u32,
 ) -> Result<(), DownloadError> {
-    let download_output_path = Path::new(download_base_path).join(&rss_item.title);
+    let download_output_path = Path::new(output_base_path).join(&rss_item.title);
     Command::new("youtube-dl")
         .arg(&rss_item.url)
         .arg("--retries")
@@ -62,8 +74,7 @@ fn determine_download_type(url: &str) -> DownloadType {
     if url.contains("www.youtube.com") {
         return DownloadType::Youtube;
     }
-
-    DownloadType::Unsupported
+    DownloadType::Webpage
 }
 
 #[derive(Error, Debug)]
@@ -74,4 +85,8 @@ pub enum DownloadError {
     UnsupportedDownloadTypeError,
     #[error("The video could not be downloaded from youtube")]
     YoutubeDownloadError,
+    #[error("The webpage could not be downloaded")]
+    WebpageDownloadError(#[from] reqwest::Error),
+    #[error("The downloaded webpage conent could not be written to output")]
+    DownloadWriteError(#[from] std::io::Error),
 }
