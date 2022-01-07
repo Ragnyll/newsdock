@@ -9,9 +9,11 @@ use thiserror::Error;
 /// A Meta descriptor to help determine what downloader to use for a given RSS item
 enum DownloadType {
     Youtube,
-    #[allow(unused)]
     Webpage,
     /// The rss_item's is not of a supported type
+    #[allow(unused)]
+    // Currently Unused. I cant think of a case where the page wont at least have html. I think
+    // this enum value still holds value though
     Unsupported,
 }
 
