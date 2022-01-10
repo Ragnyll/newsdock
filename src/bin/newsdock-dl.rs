@@ -1,14 +1,28 @@
 use clap::Parser;
+use log::LevelFilter;
 use newsdock::db::QueryManager;
 use newsdock::cache;
 use newsdock::newsboat_utils::bin_utils;
+use simple_logger::SimpleLogger;
+use std::process;
+use std::str::FromStr;
 
 fn main() {
-    let home_dir = dirs::home_dir().expect("Unable to find home dir");
     let args = Args::parse();
+    // TODO: an invalid level should call the help method. so this should go somewhere else
+    let level: LevelFilter = LevelFilter::from_str(&args.log_level).expect("invalid log level");
+    SimpleLogger::new().with_local_timestamps().with_level(level).init().unwrap();
+
+    let home_dir = match dirs::home_dir() {
+        Some(h) => h,
+        None => {
+            log::error!("Home directory could not be found");
+            process::exit(exitcode::DATAERR);
+        }
+    };
 
     if !args.skip_refresh {
-        bin_utils::reload_feed_items().expect("Unable to reload rss_items");
+        bin_utils::reload_feed_items().expect("unable to reload rss_items");
     }
 
     let db_location = &home_dir
@@ -28,7 +42,7 @@ fn main() {
     let item_urls = query_manager.get_all_cacheable_feed_items();
 
     for item in item_urls {
-        // TODO: this should be replaced with a logging library later instead of potentially
+        // todo: this should be replaced with a logging library later instead of potentially
         // swallowing a result
         let _ = cache::downloader::poll_cache(&item, cache_dir, args.youtube_dl_attempts);
     }
@@ -60,4 +74,7 @@ struct Args {
     /// The amount of times to retry downloads from youtube
     #[clap(long, default_value_t = 20)]
     youtube_dl_attempts: u32,
+
+    #[clap(long, default_value = "error")]
+    log_level: String
 }
