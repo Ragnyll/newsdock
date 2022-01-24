@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use std::fmt;
+
 pub mod schema;
 
 #[derive(Queryable, Debug)]
@@ -20,6 +22,12 @@ pub struct RssItem {
     deleted: i32,
     base: String,
     content_mime_type: String,
+}
+
+impl fmt::Display for RssItem {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.title)
+    }
 }
 
 #[derive(Queryable, Debug)]

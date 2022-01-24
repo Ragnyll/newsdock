@@ -10,8 +10,15 @@ use std::str::FromStr;
 
 fn main() {
     let args = Args::parse();
-    // TODO: an invalid level should call the help method. so this should go somewhere else
-    let level: LevelFilter = LevelFilter::from_str(&args.log_level).expect("invalid log level");
+
+    let level: LevelFilter = match LevelFilter::from_str(&args.log_level) {
+        Ok(ll) => ll,
+        Err(_) => {
+            eprintln!("log-level must be one of the following: info, warn, error, trace");
+            process::exit(exitcode::USAGE)
+        }
+    };
+
     SimpleLogger::new()
         .with_local_timestamps()
         .with_level(level)
@@ -29,7 +36,7 @@ fn main() {
             &newsboat_urls_location,
             &newsboat_config_location,
         ) {
-            Ok(_) => (),
+            Ok(_) => log::info!("cachedb reloaded succesfully"),
             Err(_) => log::error!("Unable to reload rss_items"),
         };
     }
@@ -39,9 +46,10 @@ fn main() {
     let item_urls = query_manager.get_all_cacheable_feed_items();
 
     for item in item_urls {
-        // todo: this should be replaced with a logging library later instead of potentially
-        // swallowing a result
-        let _ = cache::downloader::poll_cache(&item, &cache_dir, args.youtube_dl_attempts);
+        match cache::downloader::poll_cache(&item, &cache_dir, args.youtube_dl_attempts) {
+            Ok(_) => log::info!("downloaded: {item}"),
+            Err(e) => log::error!("Failed to download \"{item}\": {e}"),
+        }
     }
 }
 
@@ -70,7 +78,7 @@ fn get_file_location_or_abort(target: &str) -> String {
         process::exit(exitcode::OSFILE);
     }
 
-    return String::from(t);
+    t
 }
 
 /// A utility for downloading rss_items onto local storage

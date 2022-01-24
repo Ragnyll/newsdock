@@ -45,7 +45,8 @@ fn download(
 
 /// Downloads the webpage
 fn download_webpage(rss_item: &RssItem, output_base_path: &str) -> Result<(), DownloadError> {
-    let download_output_path = Path::new(output_base_path).join(format!("{}.html", &rss_item.title));
+    let download_output_path =
+        Path::new(output_base_path).join(format!("{}.html", &rss_item.title));
     let resp = reqwest::blocking::get(&rss_item.url)?.bytes()?;
     let mut ofile = File::create(download_output_path)?;
     ofile.write_all(&resp)?;
