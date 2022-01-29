@@ -41,14 +41,31 @@ fn main() {
         };
     }
 
-    let query_manager = QueryManager::new(&db_location);
+    let query_manager = match QueryManager::new(&db_location) {
+        Ok(qm) => {
+            log::info!("Connection established by query manager");
+            qm
+        }
+        Err(e) => {
+            log::error!("Failed to connect to DB using query manager: {e}");
+            process::exit(exitcode::DATAERR);
+        }
+    };
 
-    let item_urls = query_manager.get_all_cacheable_feed_items();
+    let item_urls = match query_manager.get_all_cacheable_feed_items() {
+        Ok(urls) => urls,
+        Err(e) => {
+            log::error!("Failed to retrieve urls to download {e}");
+            process::exit(exitcode::DATAERR);
+        }
+    };
 
     for item in item_urls {
         match cache::downloader::poll_cache(&item, &cache_dir, args.youtube_dl_attempts) {
             Ok(_) => log::info!("downloaded: {item}"),
-            Err(e) => log::error!("Failed to download \"{item}\": {e}"),
+            Err(e) => {
+                log::error!("Failed to download \"{item}\": {e}");
+            }
         }
     }
 }

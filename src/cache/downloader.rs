@@ -11,9 +11,9 @@ enum DownloadType {
     Youtube,
     Webpage,
     /// The rss_item's is not of a supported type
-    #[allow(unused)]
     // Currently Unused. I cant think of a case where the page wont at least have html. I think
     // this enum value still holds value though
+    #[allow(unused)]
     Unsupported,
 }
 
@@ -24,6 +24,7 @@ pub fn poll_cache(
     youtube_dl_attempts: u32,
 ) -> Result<(), DownloadError> {
     if !cache_file_ops::check_cache(&rss_item.title, cache_location) {
+        log::info!("rss_item {} not found in cache. Downloading", rss_item.title);
         download(rss_item, cache_location, youtube_dl_attempts)?;
     }
 
@@ -37,9 +38,18 @@ fn download(
     youtube_dl_attempts: u32,
 ) -> Result<(), DownloadError> {
     match determine_download_type(&rss_item.url) {
-        DownloadType::Youtube => download_youtube(rss_item, output_dir, youtube_dl_attempts),
-        DownloadType::Webpage => download_webpage(rss_item, output_dir),
-        _ => Err(DownloadError::UnsupportedDownloadTypeError),
+        DownloadType::Youtube => {
+            log::info!("Downloading using Youtube Download Strategy");
+            download_youtube(rss_item, output_dir, youtube_dl_attempts)
+        }
+        DownloadType::Webpage => {
+            log::info!("Downloading using Webpage Download Strategy");
+            download_webpage(rss_item, output_dir)
+        }
+        _ => {
+            log::error!("Unable to determine a download strategy");
+            Err(DownloadError::UnsupportedDownloadTypeError)
+        }
     }
 }
 
