@@ -1,6 +1,8 @@
 # Newsdock
 A process to pre-cache certain files for newsboat so that can be viewed locally without an internet connection.
 
+NOTE: This project has not yet reached its MVP stage. Feel free to contribute, or track [the downloader project until it is ready](https://github.com/Ragnyll/newsdock/projects/1)
+
 ## Install Instructions
 
 _Prerequisites_:
@@ -10,6 +12,8 @@ Download the prerequisite from your operating system's respective package manage
 newsboat
 youtube-dl
 ```
+
+it is also required that you run newsboat once to initialize its cache db.
 
 _Installation_:
 ```
