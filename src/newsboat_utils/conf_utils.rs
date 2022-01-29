@@ -29,16 +29,16 @@ impl FeedTags {
 }
 
 /// extracts the feed urls and tag from the config file or falls back to the default
-pub fn get_feed_urls_tags() -> Vec<FeedTags> {
-    let home_dir = find_home_dir().expect("Unable to find home dir to reach urls file");
+pub fn get_feed_urls_tags() -> Result<Vec<FeedTags>, NewsboatConfigError> {
+    let home_dir = find_home_dir()?;
     let urls_path = format!("{}/{}", home_dir, DEFAULT_URLS_PATH);
-    let file = File::open(urls_path).expect("urls file cannot be opened");
+    let file = File::open(urls_path)?;
     let reader = BufReader::new(file);
 
     let mut feed_tags = vec![];
 
     for line in reader.lines() {
-        let line = line.expect("unable to read line in newsboat urls file");
+        let line = line?;
         // ignore comment lines that start with `#` or are empty
         if !line.starts_with('#') && !line.is_empty() {
             let split: Vec<String> = line.split(' ').map(String::from).collect();
@@ -46,7 +46,7 @@ pub fn get_feed_urls_tags() -> Vec<FeedTags> {
         }
     }
 
-    feed_tags
+    Ok(feed_tags)
 }
 
 /// Finds the home directory or errors in the process
@@ -68,4 +68,6 @@ fn find_home_dir() -> Result<String, NewsboatConfigError> {
 pub enum NewsboatConfigError {
     #[error("Unable to find the home dir")]
     HomePathError,
+    #[error("Unable to read newsboat urls file")]
+    NewsboatUrlOpenError(#[from] std::io::Error),
 }

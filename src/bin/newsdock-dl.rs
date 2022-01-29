@@ -1,37 +1,101 @@
 use clap::Parser;
+use log::LevelFilter;
 use newsdock::db::QueryManager;
 use newsdock::cache;
 use newsdock::newsboat_utils::bin_utils;
+use simple_logger::SimpleLogger;
+use std::process;
+use std::path::Path;
+use std::str::FromStr;
 
 fn main() {
-    let home_dir = dirs::home_dir().expect("Unable to find home dir");
     let args = Args::parse();
 
+    let level: LevelFilter = match LevelFilter::from_str(&args.log_level) {
+        Ok(ll) => ll,
+        Err(_) => {
+            eprintln!("log-level must be one of the following: info, warn, error, trace");
+            process::exit(exitcode::USAGE)
+        }
+    };
+
+    SimpleLogger::new()
+        .with_local_timestamps()
+        .with_level(level)
+        .init()
+        .unwrap();
+
+    let db_location = get_file_location_or_abort(&args.cache_db_location);
+    let newsboat_urls_location = get_file_location_or_abort(&args.newsboat_urls_location);
+    let newsboat_config_location = get_file_location_or_abort(&args.newsboat_config_location);
+    let cache_dir = get_file_location_or_abort(&args.cache_dir);
+
     if !args.skip_refresh {
-        bin_utils::reload_feed_items().expect("Unable to reload rss_items");
+        match bin_utils::reload_feed_items(
+            &db_location,
+            &newsboat_urls_location,
+            &newsboat_config_location,
+        ) {
+            Ok(_) => log::info!("cachedb reloaded succesfully"),
+            Err(_) => log::error!("Unable to reload rss_items"),
+        };
     }
 
-    let db_location = &home_dir
-        .join(args.cache_db_location)
-        .into_os_string()
-        .into_string()
-        .unwrap();
+    let query_manager = match QueryManager::new(&db_location) {
+        Ok(qm) => {
+            log::info!("Connection established by query manager");
+            qm
+        }
+        Err(e) => {
+            log::error!("Failed to connect to DB using query manager: {e}");
+            process::exit(exitcode::DATAERR);
+        }
+    };
 
-    let cache_dir = &home_dir
-        .join(args.cache_dir)
-        .into_os_string()
-        .into_string()
-        .unwrap();
-
-    let query_manager = QueryManager::new(db_location);
-
-    let item_urls = query_manager.get_all_cacheable_feed_items();
+    let item_urls = match query_manager.get_all_cacheable_feed_items() {
+        Ok(urls) => urls,
+        Err(e) => {
+            log::error!("Failed to retrieve urls to download {e}");
+            process::exit(exitcode::DATAERR);
+        }
+    };
 
     for item in item_urls {
-        // TODO: this should be replaced with a logging library later instead of potentially
-        // swallowing a result
-        let _ = cache::downloader::poll_cache(&item, cache_dir, args.youtube_dl_attempts);
+        match cache::downloader::poll_cache(&item, &cache_dir, args.youtube_dl_attempts) {
+            Ok(_) => log::info!("downloaded: {item}"),
+            Err(e) => {
+                log::error!("Failed to download \"{item}\": {e}");
+            }
+        }
     }
+}
+
+/// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
+fn get_file_location_or_abort(target: &str) -> String {
+    let home_dir = match dirs::home_dir() {
+        Some(h) => h,
+        None => {
+            log::error!("Home directory could not be found");
+            process::exit(exitcode::OSFILE);
+        }
+    };
+
+    let t = &home_dir.join(target).into_os_string();
+
+    let t = match t.clone().into_string() {
+        Ok(t) => t,
+        Err(_) => {
+            log::error!("{} is not a valid file location", target);
+            process::exit(exitcode::OSFILE);
+        }
+    };
+
+    if !Path::new(&t).exists() {
+        log::error!("{} does not exist", target);
+        process::exit(exitcode::OSFILE);
+    }
+
+    t
 }
 
 /// A utility for downloading rss_items onto local storage
@@ -45,8 +109,13 @@ struct Args {
 
     /// An optional override for the location where the newsboat urls file is stored relative to
     /// the home dir
-    #[clap(short, long)]
-    newsboat_urls_location: Option<String>,
+    #[clap(long, default_value = ".config/newsboat/urls")]
+    newsboat_urls_location: String,
+
+    /// An optional override for the location where the newsboat urls file is stored relative to
+    /// the home dir
+    #[clap(long, default_value = ".config/newsboat/config")]
+    newsboat_config_location: String,
 
     /// An opitonal override for the location where newsboats db is stored relative to the home_dir
     /// defaults to "/.local/share/newsboat/cache.db"
@@ -60,4 +129,7 @@ struct Args {
     /// The amount of times to retry downloads from youtube
     #[clap(long, default_value_t = 20)]
     youtube_dl_attempts: u32,
+
+    #[clap(long, default_value = "error")]
+    log_level: String,
 }
