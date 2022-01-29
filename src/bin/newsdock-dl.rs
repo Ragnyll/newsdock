@@ -61,7 +61,7 @@ fn main() {
     };
 
     for item in item_urls {
-        match cache::downloader::poll_cache(&item, &cache_dir, args.youtube_dl_attempts) {
+        match cache::downloader::poll_cache(&item, &cache_dir, args.yt_dlp_attempts) {
             Ok(_) => log::info!("downloaded: {item}"),
             Err(e) => {
                 log::error!("Failed to download \"{item}\": {e}");
@@ -128,7 +128,7 @@ struct Args {
 
     /// The amount of times to retry downloads from youtube
     #[clap(long, default_value_t = 20)]
-    youtube_dl_attempts: u32,
+    yt_dlp_attempts: u32,
 
     #[clap(long, default_value = "error")]
     log_level: String,
