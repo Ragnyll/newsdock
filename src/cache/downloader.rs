@@ -21,11 +21,11 @@ enum DownloadType {
 pub fn poll_cache(
     rss_item: &RssItem,
     cache_location: &str,
-    youtube_dl_attempts: u32,
+    yt_dlp_attempts: u32,
 ) -> Result<(), DownloadError> {
     if !cache_file_ops::check_cache(&rss_item.title, cache_location) {
         log::info!("rss_item {} not found in cache. Downloading", rss_item.title);
-        download(rss_item, cache_location, youtube_dl_attempts)?;
+        download(rss_item, cache_location, yt_dlp_attempts)?;
     }
 
     Ok(())
@@ -35,12 +35,12 @@ pub fn poll_cache(
 fn download(
     rss_item: &RssItem,
     output_dir: &str,
-    youtube_dl_attempts: u32,
+    yt_dlp_attempts: u32,
 ) -> Result<(), DownloadError> {
     match determine_download_type(&rss_item.url) {
         DownloadType::Youtube => {
-            log::info!("Downloading using Youtube Download Strategy");
-            download_youtube(rss_item, output_dir, youtube_dl_attempts)
+            log::info!("Downloading using yt-dlp Strategy");
+            download_youtube(rss_item, output_dir, yt_dlp_attempts)
         }
         DownloadType::Webpage => {
             log::info!("Downloading using Webpage Download Strategy");
@@ -70,7 +70,7 @@ fn download_youtube(
     num_retries: u32,
 ) -> Result<(), DownloadError> {
     let download_output_path = Path::new(output_base_path).join(&rss_item.title);
-    Command::new("youtube-dl")
+    Command::new("yt-dlp")
         .arg(&rss_item.url)
         .arg("--retries")
         .arg(num_retries.to_string())
