@@ -1,6 +1,11 @@
 use std::path::{Path, PathBuf};
 use std::fs;
 
+
+pub fn get_files_matching_basename(f_basename: &str, cache_location: &str) -> Vec<String> {
+    vec![]
+}
+
 /// returns whether or not the cache contains a file with the specified basename
 pub fn check_cache(f_basename: &str, cache_location: &str) -> bool {
     let home_dir: PathBuf = dirs::home_dir().expect("Unable to find home dir while checking cache");
