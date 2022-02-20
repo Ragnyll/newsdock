@@ -61,7 +61,7 @@ fn main() {
     };
 
     for item in item_urls {
-        match cache::downloader::poll_cache(&item, &cache_dir, args.yt_dlp_attempts) {
+        match cache::downloader::poll_cache(&item, Some(cache_dir.clone()), args.yt_dlp_attempts) {
             Ok(_) => log::info!("downloaded: {item}"),
             Err(e) => {
                 log::error!("Failed to download \"{item}\": {e}");

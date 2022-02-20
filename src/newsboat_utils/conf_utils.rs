@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use thiserror::Error;
 
 const DEFAULT_URLS_PATH: &str = ".config/newsboat/urls";
+const DEFAULT_NEWSBOAT_CONF_PATH: &str = ".config/newsboat/config";
 
 /// The Feed Urls and tags from the urls config file
 #[derive(Debug)]
@@ -49,6 +50,27 @@ pub fn get_feed_urls_tags() -> Result<Vec<FeedTags>, NewsboatConfigError> {
     Ok(feed_tags)
 }
 
+/// retrieves the browser set by the browser conf option in the newsboat config
+pub fn get_browser() -> Result<Option<String>, NewsboatConfigError> {
+    let home_dir = find_home_dir()?;
+    let conf_path = format!("{}/{}", home_dir, DEFAULT_NEWSBOAT_CONF_PATH);
+    let file = File::open(conf_path)?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line?;
+        // ignore comment lines that start with `#` or are empty
+        if !line.starts_with("browser ") {
+            let split: Vec<String> = line.split(' ').map(String::from).collect();
+            let browser = split[1].clone();
+            eprintln!("newsboat browser is: {browser:?}");
+            return Ok(Some(split[1].clone()));
+        }
+    }
+
+    Ok(None)
+}
+
 /// Finds the home directory or errors in the process
 fn find_home_dir() -> Result<String, NewsboatConfigError> {
     let home_dir: PathBuf = match dirs::home_dir() {
@@ -68,6 +90,6 @@ fn find_home_dir() -> Result<String, NewsboatConfigError> {
 pub enum NewsboatConfigError {
     #[error("Unable to find the home dir")]
     HomePathError,
-    #[error("Unable to read newsboat urls file")]
-    NewsboatUrlOpenError(#[from] std::io::Error),
+    #[error("Unable to read a newsboat config file")]
+    NewsboatReadError(#[from] std::io::Error),
 }

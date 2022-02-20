@@ -20,12 +20,15 @@ enum DownloadType {
 /// checks if the rss_item exists in the cache and downloads it if it is not
 pub fn poll_cache(
     rss_item: &RssItem,
-    cache_location: &str,
+    cache_location: Option<String>,
     yt_dlp_attempts: u32,
 ) -> Result<(), DownloadError> {
-    if !cache_file_ops::check_cache(&rss_item.title, cache_location) {
-        log::info!("rss_item {} not found in cache. Downloading", rss_item.title);
-        download(rss_item, cache_location, yt_dlp_attempts)?;
+    if !cache_file_ops::check_cache(&rss_item.title, cache_location.clone()) {
+        log::info!(
+            "rss_item {} not found in cache. Downloading",
+            rss_item.title
+        );
+        download(rss_item, &cache_location.unwrap(), yt_dlp_attempts)?;
     }
 
     Ok(())
