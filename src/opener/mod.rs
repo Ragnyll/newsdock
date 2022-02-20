@@ -15,9 +15,12 @@ pub fn open(
     cache_location: Option<String>,
 ) -> Result<(), OpenerError> {
     let cache_location = cache_location.unwrap_or(String::from(cache::DEFAULT_CACHE_LOCATION));
+    log::info!("cache location {cache_location:?}");
     if cache::cache_file_ops::check_cache(title, Some(cache_location.clone())) {
+        log::info!("opening {title} from cache");
         open_from_cache(title, file_opener_program, &cache_location)
     } else {
+        log::info!("opening with browser");
         open_with_browser(title)
     }
 }
@@ -33,13 +36,17 @@ fn open_from_cache(
 
     match file_opener_program {
         Some(opener) => {
-            if opener == String::from(RIFLE){
+            if opener == String::from(RIFLE) {
+                log::info!("Opening using rifle");
                 open_from_cache_with_rifle(&path.into_os_string().into_string().unwrap())
             } else {
                 Err(OpenerError::UnsupportedFileOpener)
             }
-        },
-        None => open_from_cache_with_system_default(&path.into_os_string().into_string().unwrap()),
+        }
+        None => {
+            log::info!("Opening using system default opener");
+            open_from_cache_with_system_default(&path.into_os_string().into_string().unwrap())
+        }
     }
 }
 
@@ -53,7 +60,9 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
 fn open_with_browser(_title: &str) -> Result<(), OpenerError> {
-    // let browser = determine_browser()?;
+    let _browser = determine_browser()?;
+
+    log::error!("opening with browser not yet supported");
 
     Ok(())
 }

@@ -21,8 +21,12 @@ pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
     let home_dir: PathBuf = dirs::home_dir().expect("Unable to find home dir while checking cache");
     let path = Path::new(&home_dir).join(cache_location.unwrap_or(String::from(crate::cache::DEFAULT_CACHE_LOCATION)));
 
+    log::info!("basename = {f_basename:?}");
+    log::info!("path = {path:?}");
     for file in fs::read_dir(&path).unwrap() {
+        log::info!("i see file {file:?}");
         if file.unwrap().path().file_stem().unwrap() == f_basename {
+            log::info!("found {f_basename}");
             return true;
         }
     }
