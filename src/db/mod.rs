@@ -15,7 +15,7 @@ impl QueryManager {
     /// Creates a new QueryManager connected to the given database
     pub fn new(database_url: &str) -> Result<Self, diesel::ConnectionError> {
         Ok(Self {
-            connection: SqliteConnection::establish(database_url)?
+            connection: SqliteConnection::establish(database_url)?,
         })
     }
 
@@ -36,7 +36,7 @@ impl QueryManager {
                 &mut rss_item
                     .filter(feedurl.eq(cache_feed_url))
                     .filter(unread.eq(1))
-                    .load::<RssItem>(&self.connection)?
+                    .load::<RssItem>(&self.connection)?,
             );
         }
 
