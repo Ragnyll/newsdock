@@ -13,7 +13,8 @@ pub fn open(
     file_opener_program: Option<String>,
     cache_location: Option<String>,
 ) -> Result<(), OpenerError> {
-    let cache_location = cache_location.unwrap_or(String::from(cache::DEFAULT_CACHE_LOCATION));
+    let cache_location =
+        cache_location.unwrap_or_else(|| String::from(cache::DEFAULT_CACHE_LOCATION));
     log::info!("cache location {cache_location:?}");
     if cache::cache_file_ops::check_cache(title, Some(cache_location.clone())) {
         log::info!("opening {title} from cache");
@@ -30,7 +31,7 @@ fn open_from_cache(
     file_opener_program: Option<String>,
     cache_location: &str,
 ) -> Result<(), OpenerError> {
-    let path = cache::cache_file_ops::get_file_matching_basename(&title, &cache_location);
+    let path = cache::cache_file_ops::get_file_matching_basename(title, cache_location);
 
     if path.is_none() {
         return Err(OpenerError::UnableToOpen);
@@ -38,7 +39,7 @@ fn open_from_cache(
 
     match file_opener_program {
         Some(opener) => {
-            if opener == String::from(RIFLE) {
+            if opener == RIFLE {
                 log::info!("Opening {path:?} using rifle");
                 open_from_cache_with_rifle(&path.unwrap())
             } else {
@@ -53,10 +54,7 @@ fn open_from_cache(
 }
 
 fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
-    Command::new(String::from(RIFLE))
-        .arg(path)
-        .output()
-        .unwrap();
+    Command::new(RIFLE).arg(path).output().unwrap();
     Ok(())
 }
 
