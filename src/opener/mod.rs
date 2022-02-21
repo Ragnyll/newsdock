@@ -1,7 +1,6 @@
 use crate::cache;
 use crate::newsboat_utils::conf_utils;
 use std::process::Command;
-use std::path::Path;
 use thiserror::Error;
 
 const DEFAULT_LINUX_OPENER: &str = "xdg-open";
@@ -31,21 +30,24 @@ fn open_from_cache(
     file_opener_program: Option<String>,
     cache_location: &str,
 ) -> Result<(), OpenerError> {
-    let path = Path::new(cache_location).join(&title);
-    eprintln!("path: {path:?}");
+    let path = cache::cache_file_ops::get_file_matching_basename(&title, &cache_location);
+
+    if path.is_none() {
+        return Err(OpenerError::UnableToOpen);
+    }
 
     match file_opener_program {
         Some(opener) => {
             if opener == String::from(RIFLE) {
-                log::info!("Opening using rifle");
-                open_from_cache_with_rifle(&path.into_os_string().into_string().unwrap())
+                log::info!("Opening {path:?} using rifle");
+                open_from_cache_with_rifle(&path.unwrap())
             } else {
                 Err(OpenerError::UnsupportedFileOpener)
             }
         }
         None => {
             log::info!("Opening using system default opener");
-            open_from_cache_with_system_default(&path.into_os_string().into_string().unwrap())
+            open_from_cache_with_system_default(&path.unwrap())
         }
     }
 }
