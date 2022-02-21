@@ -60,7 +60,8 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
 fn open_with_browser(_title: &str) -> Result<(), OpenerError> {
-    let _browser = determine_browser()?;
+    let browser = determine_browser()?;
+    log::info!("using browser: {browser}");
 
     log::error!("opening with browser not yet supported");
 
