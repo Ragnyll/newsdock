@@ -24,7 +24,8 @@ pub fn get_file_matching_basename(f_basename: &str, cache_location: &str) -> Opt
 /// returns whether or not the cache contains a file with the specified basename
 pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
     let home_dir: PathBuf = dirs::home_dir().expect("Unable to find home dir while checking cache");
-    let path = Path::new(&home_dir).join(cache_location.unwrap_or(String::from(crate::cache::DEFAULT_CACHE_LOCATION)));
+    let path = Path::new(&home_dir)
+        .join(cache_location.unwrap_or(String::from(crate::cache::DEFAULT_CACHE_LOCATION)));
 
     log::info!("basename = {f_basename:?}");
     log::info!("path = {path:?}");
