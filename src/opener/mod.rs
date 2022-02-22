@@ -1,5 +1,6 @@
 use crate::cache;
 use crate::newsboat_utils::conf_utils;
+use crate::db::{DbError, QueryManager};
 use std::process::Command;
 use thiserror::Error;
 
@@ -12,6 +13,7 @@ pub fn open(
     title: &str,
     file_opener_program: Option<String>,
     cache_location: Option<String>,
+    query_manager: QueryManager,
 ) -> Result<(), OpenerError> {
     let cache_location =
         cache_location.unwrap_or_else(|| String::from(cache::DEFAULT_CACHE_LOCATION));
@@ -21,7 +23,7 @@ pub fn open(
         open_from_cache(title, file_opener_program, &cache_location)
     } else {
         log::info!("opening with browser");
-        open_with_browser(title)
+        open_with_browser(title, query_manager)
     }
 }
 
@@ -59,11 +61,12 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 }
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
-fn open_with_browser(_title: &str) -> Result<(), OpenerError> {
+fn open_with_browser(title: &str, query_manager: QueryManager) -> Result<(), OpenerError> {
     let browser = determine_browser()?;
-    log::info!("using browser: {browser}");
+    let url = query_manager.get_url_from_title(title)?;
+    log::info!("using browser: {browser} to open url: {url}");
 
-    log::error!("opening with browser not yet supported");
+    Command::new(browser).arg(url).output().unwrap();
 
     Ok(())
 }
@@ -102,4 +105,6 @@ pub enum OpenerError {
     UnparsableBrowswer(#[from] conf_utils::NewsboatConfigError),
     #[error("No Browswer variable is defined")]
     NoBrowserDefined,
+    #[error("Unable to open url with browser")]
+    BrowserOpenError(#[from] DbError),
 }

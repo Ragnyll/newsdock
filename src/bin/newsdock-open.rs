@@ -1,7 +1,9 @@
 use clap::Parser;
 use log::LevelFilter;
 use newsdock::opener;
+use newsdock::db::QueryManager;
 use simple_logger::SimpleLogger;
+use std::path::Path;
 use std::process;
 use std::str::FromStr;
 
@@ -22,9 +24,54 @@ fn main() {
         .init()
         .unwrap();
 
-    log::info!("Trying to open \"Fornite Daycare\"");
-    let open = opener::open("Fortnite Daycare", Some(String::from("rifle")), None);
+    let db_location = get_file_location_or_abort(&args.cache_db_location);
+    let query_manager = match QueryManager::new(&db_location) {
+        Ok(qm) => {
+            log::info!("Connection established by query manager");
+            qm
+        }
+        Err(e) => {
+            log::error!("Failed to connect to DB using query manager: {e}");
+            process::exit(exitcode::DATAERR);
+        }
+    };
+
+    log::info!("Trying to open \"Fortnite Daycare\"");
+    let open = opener::open(
+        "Fortnite Daycare",
+        Some(String::from("rifle")),
+        None,
+        query_manager,
+    );
     println!("open = {open:?}")
+}
+
+/// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
+fn get_file_location_or_abort(target: &str) -> String {
+    let home_dir = match dirs::home_dir() {
+        Some(h) => h,
+        None => {
+            log::error!("Home directory could not be found");
+            process::exit(exitcode::OSFILE);
+        }
+    };
+
+    let t = &home_dir.join(target).into_os_string();
+
+    let t = match t.clone().into_string() {
+        Ok(t) => t,
+        Err(_) => {
+            log::error!("{} is not a valid file location", target);
+            process::exit(exitcode::OSFILE);
+        }
+    };
+
+    if !Path::new(&t).exists() {
+        log::error!("{} does not exist", target);
+        process::exit(exitcode::OSFILE);
+    }
+
+    t
 }
 
 /// A utility for downloading rss_items onto local storage
