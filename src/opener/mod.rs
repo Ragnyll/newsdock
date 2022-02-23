@@ -10,20 +10,22 @@ const RIFLE: &str = "rifle";
 /// Opens the cached file with the opener or if the file is not cache defaults the browser set in
 /// the newsboat config
 pub fn open(
-    title: &str,
+    url: &str,
     file_opener_program: Option<String>,
     cache_location: Option<String>,
     query_manager: QueryManager,
 ) -> Result<(), OpenerError> {
+    log::info!("converting url {url} to title");
+    let title = query_manager.get_title_from_url(url)?;
     let cache_location =
         cache_location.unwrap_or_else(|| String::from(cache::DEFAULT_CACHE_LOCATION));
     log::info!("cache location {cache_location:?}");
-    if cache::cache_file_ops::check_cache(title, Some(cache_location.clone())) {
+    if cache::cache_file_ops::check_cache(&title, Some(cache_location.clone())) {
         log::info!("opening {title} from cache");
-        open_from_cache(title, file_opener_program, &cache_location)
+        open_from_cache(&title, file_opener_program, &cache_location)
     } else {
         log::info!("opening with browser");
-        open_with_browser(title, query_manager)
+        open_with_browser(url)
     }
 }
 
@@ -61,28 +63,21 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 }
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
-fn open_with_browser(title: &str, query_manager: QueryManager) -> Result<(), OpenerError> {
+fn open_with_browser(url: &str) -> Result<(), OpenerError> {
     let browser = determine_browser()?;
-    let url = query_manager.get_url_from_title(title)?;
     log::info!("using browser: {browser} to open url: {url}");
 
     Command::new(browser).arg(url).output().unwrap();
-
     Ok(())
 }
 
-/// uses either the browser defined by newsboat or fallsback to the browser defined by $BROWSER
+/// opens the url defined by the shell $BROWSER variable
 fn determine_browser() -> Result<String, OpenerError> {
-    match conf_utils::get_browser()? {
-        Some(browser) => Ok(browser),
-        None => {
-            let browser = std::env::var("BROWSER");
-            if browser.is_err() {
-                return Err(OpenerError::NoBrowserDefined);
-            }
-            Ok(browser.unwrap())
-        }
+    let browser = std::env::var("BROWSER");
+    if browser.is_err() {
+        return Err(OpenerError::NoBrowserDefined);
     }
+    Ok(browser.unwrap())
 }
 
 fn open_from_cache_with_system_default(path: &str) -> Result<(), OpenerError> {

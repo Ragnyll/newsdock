@@ -62,10 +62,8 @@ pub fn get_browser() -> Result<Option<String>, NewsboatConfigError> {
         // ignore comment lines that start with `#` or are empty
         if line.starts_with("browser ") {
             let split: Vec<String> = line.split(' ').map(String::from).collect();
-            eprintln!("split {split:?}");
             let browser = split[1].clone();
-            eprintln!("newsboat browser is: {browser:?}");
-            return Ok(Some(split[1].clone()));
+            return Ok(Some(browser));
         }
     }
 

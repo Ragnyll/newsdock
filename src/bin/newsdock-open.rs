@@ -36,14 +36,12 @@ fn main() {
         }
     };
 
-    log::info!("Trying to open \"Fortnite Daycare\"");
-    let open = opener::open(
-        "Fortnite Daycare",
+    let _ = opener::open(
+        &args.title,
         Some(String::from("rifle")),
-        None,
+        Some(args.cache_dir),
         query_manager,
     );
-    println!("open = {open:?}")
 }
 
 /// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
@@ -79,6 +77,9 @@ fn get_file_location_or_abort(target: &str) -> String {
 #[clap(about, version)]
 #[readonly::make]
 struct Args {
+    /// The title of the file to look for in he cache or open in a browser
+    title: String,
+
     /// An optional location for the default cache directory
     #[clap(long, default_value = ".cache/newsdock/")]
     cache_dir: String,
