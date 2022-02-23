@@ -4,6 +4,7 @@ use newsdock::db::QueryManager;
 use newsdock::cache;
 use newsdock::newsboat_utils::bin_utils;
 use simple_logger::SimpleLogger;
+use std::fs;
 use std::process;
 use std::path::Path;
 use std::str::FromStr;
@@ -28,7 +29,7 @@ fn main() {
     let db_location = get_file_location_or_abort(&args.cache_db_location);
     let newsboat_urls_location = get_file_location_or_abort(&args.newsboat_urls_location);
     let newsboat_config_location = get_file_location_or_abort(&args.newsboat_config_location);
-    let cache_dir = get_file_location_or_abort(&args.cache_dir);
+    let cache_dir = get_dir_or_create(&args.cache_dir);
 
     if !args.skip_refresh {
         match bin_utils::reload_feed_items(
@@ -96,6 +97,35 @@ fn get_file_location_or_abort(target: &str) -> String {
     }
 
     t
+}
+
+/// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
+fn get_dir_or_create(target: &str) -> String {
+    let home_dir = match dirs::home_dir() {
+        Some(h) => h,
+        None => {
+            log::error!("Home directory could not be found");
+            process::exit(exitcode::OSFILE);
+        }
+    };
+
+    let t = &home_dir.join(target);
+
+    if !t.exists() {
+        log::info!("creating cache_dir {t:?}");
+        fs::create_dir_all(t).unwrap_or_else(|_| {
+            log::error!("{t:?} could not be created");
+            process::exit(exitcode::OSFILE);
+        });
+    }
+
+    t.clone()
+        .into_os_string()
+        .into_string()
+        .unwrap_or_else(|_| {
+            log::error!("{t:?} could not be created");
+            process::exit(exitcode::OSFILE);
+        })
 }
 
 /// A utility for downloading rss_items onto local storage
