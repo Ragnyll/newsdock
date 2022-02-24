@@ -57,8 +57,8 @@ impl QueryManager {
         Ok(rss_item
             .filter(url.eq(url_search))
             .load::<RssItem>(&self.connection)?[0]
-            .id.to_string()
-            .clone())
+            .id
+            .to_string())
     }
 
     /// Given a unique title find the rss article that is associated to it
