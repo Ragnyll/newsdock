@@ -6,7 +6,7 @@ pub mod schema;
 #[derive(Queryable, Debug)]
 #[readonly::make]
 pub struct RssItem {
-    id: i32,
+    pub id: i32,
     guid: String,
     pub title: String,
     author: String,

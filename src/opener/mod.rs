@@ -15,14 +15,14 @@ pub fn open(
     cache_location: Option<String>,
     query_manager: QueryManager,
 ) -> Result<(), OpenerError> {
-    log::info!("converting url {url} to title");
-    let title = query_manager.get_title_from_url(url)?;
+    log::info!("converting url {url} to id");
+    let id = query_manager.get_id_from_url(url)?;
     let cache_location =
         cache_location.unwrap_or_else(|| String::from(cache::DEFAULT_CACHE_LOCATION));
     log::info!("cache location {cache_location:?}");
-    if cache::cache_file_ops::check_cache(&title, Some(cache_location.clone())) {
-        log::info!("opening {title} from cache");
-        open_from_cache(&title, file_opener_program, &cache_location)
+    if cache::cache_file_ops::check_cache(&id, Some(cache_location.clone())) {
+        log::info!("opening {id} from cache");
+        open_from_cache(&id, file_opener_program, &cache_location)
     } else {
         log::info!("opening with browser");
         open_with_browser(url)
@@ -31,11 +31,11 @@ pub fn open(
 
 /// This assumes that the file exists. This function should be called through the open public api.
 fn open_from_cache(
-    title: &str,
+    id: &str,
     file_opener_program: Option<String>,
     cache_location: &str,
 ) -> Result<(), OpenerError> {
-    let path = cache::cache_file_ops::get_file_matching_basename(title, cache_location);
+    let path = cache::cache_file_ops::get_file_matching_basename(id, cache_location);
 
     if path.is_none() {
         return Err(OpenerError::UnableToOpen);
@@ -81,7 +81,7 @@ fn determine_browser() -> Result<String, OpenerError> {
 }
 
 fn open_from_cache_with_system_default(path: &str) -> Result<(), OpenerError> {
-    // check for file matching str title
+    // check for file matching str id
     Command::new(DEFAULT_LINUX_OPENER)
         .arg(path)
         .output()

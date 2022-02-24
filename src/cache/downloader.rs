@@ -23,9 +23,10 @@ pub fn poll_cache(
     cache_location: Option<String>,
     yt_dlp_attempts: u32,
 ) -> Result<(), DownloadError> {
-    if !cache_file_ops::check_cache(&rss_item.title, cache_location.clone()) {
+    if !cache_file_ops::check_cache(&rss_item.id.to_string(), cache_location.clone()) {
         log::info!(
-            "rss_item {} not found in cache. Downloading",
+            "rss_item {} {} not found in cache. Downloading",
+            rss_item.id,
             rss_item.title
         );
         download(rss_item, &cache_location.unwrap(), yt_dlp_attempts)?;
@@ -59,20 +60,20 @@ fn download(
 /// Downloads the webpage
 fn download_webpage(rss_item: &RssItem, output_base_path: &str) -> Result<(), DownloadError> {
     let download_output_path =
-        Path::new(output_base_path).join(format!("{}.html", &rss_item.title));
+        Path::new(output_base_path).join(format!("{}.html", &rss_item.id.to_string()));
     let resp = reqwest::blocking::get(&rss_item.url)?.bytes()?;
     let mut ofile = File::create(download_output_path)?;
     ofile.write_all(&resp)?;
     Ok(())
 }
 
-/// downloads the rss item to `{output_base_path}/{rss_item.title}`
+/// downloads the rss item to `{output_base_path}/{rss_item.id}`
 fn download_youtube(
     rss_item: &RssItem,
     output_base_path: &str,
     num_retries: u32,
 ) -> Result<(), DownloadError> {
-    let download_output_path = Path::new(output_base_path).join(&rss_item.title);
+    let download_output_path = Path::new(output_base_path).join(&rss_item.id.to_string());
     Command::new("yt-dlp")
         .arg(&rss_item.url)
         .arg("--retries")
