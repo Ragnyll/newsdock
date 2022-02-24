@@ -52,6 +52,15 @@ impl QueryManager {
             .clone())
     }
 
+    /// Given a unique url find the rss article title that is associated to it
+    pub fn get_id_from_url(&self, url_search: &str) -> Result<String, DbError> {
+        Ok(rss_item
+            .filter(url.eq(url_search))
+            .load::<RssItem>(&self.connection)?[0]
+            .id
+            .to_string())
+    }
+
     /// Given a unique title find the rss article that is associated to it
     pub fn get_url_from_title(&self, title_search: &str) -> Result<String, DbError> {
         Ok(rss_item
