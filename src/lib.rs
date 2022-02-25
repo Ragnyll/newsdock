@@ -7,3 +7,5 @@ pub mod db;
 pub mod models;
 pub mod newsboat_utils;
 pub mod opener;
+pub mod fs;
+pub mod conf;
