@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.58"
 
 [dependencies]
+anyhow = "1.0"
 clap = { version = "3", features = ["derive"] }
 diesel = { version = "1.4.8", features = ["sqlite"] }
 dirs = "^4.0"
