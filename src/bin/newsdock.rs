@@ -4,6 +4,7 @@ use newsdock::conf::CmdType;
 use newsdock::db::QueryManager;
 use newsdock::fs;
 use newsdock::newsboat_utils::bin_utils;
+use newsdock::opener;
 use std::process;
 
 fn main() {
@@ -32,12 +33,21 @@ fn main() {
             download(conf.skip_refresh.unwrap(), &db_location, &newsboat_urls_location, &newsboat_config_location, &cache_dir, conf.yt_dlp_attempts.unwrap(), query_manager);
         }
         CmdType::Open => {
-            println!("Opening")
+            open(&conf.open_url.unwrap(), &"rifle", &cache_dir, query_manager);
         }
         CmdType::Clean => {
-            println!("Cleaning")
+            eprintln!("Cache Clean not yet implemented")
         }
     }
+}
+
+fn open(url: &str, opener_bin: &str, cache_dir: &str, query_manager: QueryManager) {
+    let _ = opener::open(
+        url,
+        Some(String::from(opener_bin)),
+        Some(String::from(cache_dir)),
+        query_manager,
+    );
 }
 
 fn download(
