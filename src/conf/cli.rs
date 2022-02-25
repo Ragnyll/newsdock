@@ -51,13 +51,9 @@ pub enum Commands {
     },
 
     /// Cleans the cache following the an oldest first eviction policy
-    Clean {
-
-    }
+    Clean {},
 }
 
 pub fn get_cli_args() -> Cli {
-    return Cli::parse();
+    Cli::parse()
 }
-
-

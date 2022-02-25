@@ -8,7 +8,7 @@ use thiserror::Error;
 pub fn get_file_location_or_abort(target: &str) -> Result<String, FsError> {
     let home_dir = match dirs::home_dir() {
         Some(hd) => hd,
-        None => return Err(FsError::HomeDirNotFound)
+        None => return Err(FsError::HomeDirNotFound),
     };
     let t = &home_dir.join(target).into_os_string();
 
@@ -18,7 +18,7 @@ pub fn get_file_location_or_abort(target: &str) -> Result<String, FsError> {
 
     match t.clone().into_string() {
         Ok(fl) => Ok(fl),
-        Err(_) => Err(FsError::InvalidUnicode)
+        Err(_) => Err(FsError::InvalidUnicode),
     }
 }
 
@@ -26,7 +26,7 @@ pub fn get_file_location_or_abort(target: &str) -> Result<String, FsError> {
 pub fn get_dir_or_create(target: &str) -> Result<String, FsError> {
     let home_dir = match dirs::home_dir() {
         Some(hd) => hd,
-        None => return Err(FsError::HomeDirNotFound)
+        None => return Err(FsError::HomeDirNotFound),
     };
     let t = &home_dir.join(target);
 

@@ -7,7 +7,7 @@ use newsdock::fs;
 use newsdock::newsboat_utils::bin_utils;
 use newsdock::opener;
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     let conf = conf::build_conf().unwrap();
 
     // TODO: replace unwraps at end of decls with anyhow
@@ -21,10 +21,18 @@ fn main() -> Result<()>{
         CmdType::Dl => {
             let newsboat_urls_location =
                 fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
-            download(conf.skip_refresh.unwrap(), &db_location, &newsboat_urls_location, &newsboat_config_location, &cache_dir, conf.yt_dlp_attempts.unwrap(), query_manager)?;
+            download(
+                conf.skip_refresh.unwrap(),
+                &db_location,
+                &newsboat_urls_location,
+                &newsboat_config_location,
+                &cache_dir,
+                conf.yt_dlp_attempts.unwrap(),
+                query_manager,
+            )?;
         }
         CmdType::Open => {
-            open(&conf.open_url.unwrap(), &"rifle", &cache_dir, query_manager)?;
+            open(&conf.open_url.unwrap(), "rifle", &cache_dir, query_manager)?;
         }
         CmdType::Clean => {
             eprintln!("Cache Clean not yet implemented")
@@ -34,7 +42,12 @@ fn main() -> Result<()>{
     Ok(())
 }
 
-fn open(url: &str, opener_bin: &str, cache_dir: &str, query_manager: QueryManager) -> Result <(), opener::OpenerError>{
+fn open(
+    url: &str,
+    opener_bin: &str,
+    cache_dir: &str,
+    query_manager: QueryManager,
+) -> Result<(), opener::OpenerError> {
     opener::open(
         url,
         Some(String::from(opener_bin)),
@@ -50,12 +63,13 @@ fn download(
     newsboat_config_location: &str,
     cache_dir: &str,
     yt_dlp_attempts: u32,
-    query_manager: QueryManager) -> Result<(), DbError> {
+    query_manager: QueryManager,
+) -> Result<(), DbError> {
     if !skip_refresh {
         match bin_utils::reload_feed_items(
-            &db_location,
-            &newsboat_urls_location,
-            &newsboat_config_location,
+            db_location,
+            newsboat_urls_location,
+            newsboat_config_location,
         ) {
             Ok(_) => log::info!("cachedb reloaded succesfully"),
             Err(_) => log::error!("Unable to reload rss_items"),

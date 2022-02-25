@@ -41,46 +41,44 @@ pub struct Conf {
 impl From<cli::Cli> for Conf {
     fn from(cli: cli::Cli) -> Self {
         match cli.command {
-            cli::Commands::Dl {newsboat_urls_location, skip_refresh, yt_dlp_attempts} => {
-                Self {
-                    cmd_type: CmdType::Dl,
-                    log_level: cli.log_level,
-                    cache_dir: cli.cache_dir,
-                    newsboat_config_location: cli.newsboat_config_location,
-                    cache_db_location:  cli.cache_db_location,
-                    open_url: None,
-                    newsboat_urls_location: Some(newsboat_urls_location),
-                    skip_refresh: Some(skip_refresh),
-                    yt_dlp_attempts: Some(yt_dlp_attempts)
-                }
+            cli::Commands::Dl {
+                newsboat_urls_location,
+                skip_refresh,
+                yt_dlp_attempts,
+            } => Self {
+                cmd_type: CmdType::Dl,
+                log_level: cli.log_level,
+                cache_dir: cli.cache_dir,
+                newsboat_config_location: cli.newsboat_config_location,
+                cache_db_location: cli.cache_db_location,
+                open_url: None,
+                newsboat_urls_location: Some(newsboat_urls_location),
+                skip_refresh: Some(skip_refresh),
+                yt_dlp_attempts: Some(yt_dlp_attempts),
             },
-            cli::Commands::Open { url } => {
-                Self {
-                    cmd_type: CmdType::Open,
-                    log_level: cli.log_level,
-                    cache_dir: cli.cache_dir,
-                    newsboat_config_location: cli.newsboat_config_location,
-                    cache_db_location:  cli.cache_db_location,
-                    open_url: Some(url),
-                    newsboat_urls_location: None,
-                    skip_refresh: None,
-                    yt_dlp_attempts: None
-                }
+            cli::Commands::Open { url } => Self {
+                cmd_type: CmdType::Open,
+                log_level: cli.log_level,
+                cache_dir: cli.cache_dir,
+                newsboat_config_location: cli.newsboat_config_location,
+                cache_db_location: cli.cache_db_location,
+                open_url: Some(url),
+                newsboat_urls_location: None,
+                skip_refresh: None,
+                yt_dlp_attempts: None,
             },
 
-            cli::Commands::Clean { } => {
-                Self {
-                    cmd_type: CmdType::Clean,
-                    log_level: cli.log_level,
-                    cache_dir: cli.cache_dir,
-                    newsboat_config_location: cli.newsboat_config_location,
-                    cache_db_location:  cli.cache_db_location,
-                    open_url: None,
-                    newsboat_urls_location: None,
-                    skip_refresh: None,
-                    yt_dlp_attempts: None
-                }
-            }
+            cli::Commands::Clean {} => Self {
+                cmd_type: CmdType::Clean,
+                log_level: cli.log_level,
+                cache_dir: cli.cache_dir,
+                newsboat_config_location: cli.newsboat_config_location,
+                cache_db_location: cli.cache_db_location,
+                open_url: None,
+                newsboat_urls_location: None,
+                skip_refresh: None,
+                yt_dlp_attempts: None,
+            },
         }
     }
 }
@@ -88,5 +86,5 @@ impl From<cli::Cli> for Conf {
 #[derive(Error, Debug)]
 pub enum ConfError {
     #[error("loglevel must be in: info, warn, error, trace")]
-    InvalidLogLevel(#[from] log::ParseLevelError)
+    InvalidLogLevel(#[from] log::ParseLevelError),
 }
