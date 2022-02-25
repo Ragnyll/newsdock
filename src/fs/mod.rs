@@ -1,61 +1,54 @@
 use std::fs;
-use std::process;
 use std::path::Path;
+use thiserror::Error;
+
 /// A set of common file system operation tools
 
 /// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
-pub fn get_file_location_or_abort(target: &str) -> String {
+pub fn get_file_location_or_abort(target: &str) -> Result<String, FsError> {
     let home_dir = match dirs::home_dir() {
-        Some(h) => h,
-        None => {
-            log::error!("Home directory could not be found");
-            process::exit(exitcode::OSFILE);
-        }
+        Some(hd) => hd,
+        None => return Err(FsError::HomeDirNotFound)
     };
-
     let t = &home_dir.join(target).into_os_string();
 
-    let t = match t.clone().into_string() {
-        Ok(t) => t,
-        Err(_) => {
-            log::error!("{} is not a valid file location", target);
-            process::exit(exitcode::OSFILE);
-        }
-    };
-
     if !Path::new(&t).exists() {
-        log::error!("{} does not exist", target);
-        process::exit(exitcode::OSFILE);
+        return Err(FsError::FileNotFound);
     }
 
-    t
+    match t.clone().into_string() {
+        Ok(fl) => Ok(fl),
+        Err(_) => Err(FsError::InvalidUnicode)
+    }
 }
 
 /// For use of extraction CLI arguments into valid file locations WILL CAUSE EXITS ON INVALID INPUT
-pub fn get_dir_or_create(target: &str) -> String {
+pub fn get_dir_or_create(target: &str) -> Result<String, FsError> {
     let home_dir = match dirs::home_dir() {
-        Some(h) => h,
-        None => {
-            log::error!("Home directory could not be found");
-            process::exit(exitcode::OSFILE);
-        }
+        Some(hd) => hd,
+        None => return Err(FsError::HomeDirNotFound)
     };
-
     let t = &home_dir.join(target);
 
     if !t.exists() {
         log::info!("creating cache_dir {t:?}");
-        fs::create_dir_all(t).unwrap_or_else(|_| {
-            log::error!("{t:?} could not be created");
-            process::exit(exitcode::OSFILE);
-        });
+        fs::create_dir_all(t)?;
     }
 
-    t.clone()
-        .into_os_string()
-        .into_string()
-        .unwrap_or_else(|_| {
-            log::error!("{t:?} could not be created");
-            process::exit(exitcode::OSFILE);
-        })
+    match t.clone().into_os_string().into_string() {
+        Ok(cd) => Ok(cd),
+        Err(_) => Err(FsError::FileNotFound),
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum FsError {
+    #[error("Unable to find the home dir")]
+    HomeDirNotFound,
+    #[error("File not found")]
+    FileNotFound,
+    #[error("Invalid Unicode in file path")]
+    InvalidUnicode,
+    #[error("IoError on cache dir creation")]
+    CacheCreationFailed(#[from] std::io::Error),
 }

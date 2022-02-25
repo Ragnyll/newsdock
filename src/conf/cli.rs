@@ -5,24 +5,24 @@ use clap::{Parser, Subcommand};
 #[clap(name = "newsdock")]
 pub struct Cli {
     #[clap(long, default_value = "error")]
-    log_level: String,
+    pub log_level: String,
 
     #[clap(subcommand)]
     pub command: Commands,
 
     /// An optional location for the default cache directory
     #[clap(long, default_value = ".cache/newsdock/")]
-    cache_dir: String,
+    pub cache_dir: String,
 
     /// An optional override for the location where the newsboat urls file is stored relative to
     /// the home dir
     #[clap(long, default_value = ".config/newsboat/config")]
-    newsboat_config_location: String,
+    pub newsboat_config_location: String,
 
     /// An opitonal override for the location where newsboats db is stored relative to the home_dir
     /// defaults to "/.local/share/newsboat/cache.db"
     #[clap(long, default_value = ".local/share/newsboat/cache.db")]
-    cache_db_location: String,
+    pub cache_db_location: String,
 }
 
 #[derive(Subcommand, Debug)]
