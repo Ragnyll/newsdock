@@ -61,7 +61,7 @@ pub fn get_max_items() -> Result<u32, NewsboatConfigError> {
     for line in reader.lines() {
         let line = line?;
         // ignore comment lines that start with `#` or are empty
-        if !line.starts_with('#') && !line.is_empty() {
+        if !line.starts_with('#') && line.contains("max-items") {
             let split: Vec<String> = line.split(' ').map(String::from).collect();
             max_items = split[1].parse::<u32>()?;
         }

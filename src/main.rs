@@ -10,7 +10,6 @@ use newsdock::opener;
 fn main() -> Result<()> {
     let conf = conf::build_conf().unwrap();
 
-    // TODO: replace unwraps at end of decls with anyhow
     let db_location = fs::get_file_location_or_abort(&conf.cache_db_location)?;
     let newsboat_config_location = fs::get_file_location_or_abort(&conf.newsboat_config_location)?;
     let cache_dir = fs::get_dir_or_create(&conf.cache_dir)?;
