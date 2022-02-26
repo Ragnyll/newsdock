@@ -77,8 +77,7 @@ pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<
 
 pub fn get_cached_file_ids(cache_location: &str) -> Vec<i32> {
     let home_dir: PathBuf = dirs::home_dir().expect("Unable to find home dir while checking cache");
-    let path = Path::new(&home_dir)
-        .join(cache_location);
+    let path = Path::new(&home_dir).join(cache_location);
 
     let mut cached_file_ids = vec![];
     for file in fs::read_dir(&path).unwrap() {
