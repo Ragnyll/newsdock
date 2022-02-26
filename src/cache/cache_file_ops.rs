@@ -5,7 +5,7 @@ struct CachedFile {
     author: String,
     id: u32,
     //TODO: probaly wanna use actually date time, (blegh)
-    published_date: String
+    published_date: String,
 }
 
 /// There should only be one file returned by this function. If more than one is found the cache is
@@ -52,4 +52,27 @@ pub fn clean_cache() {
 
     // if author has items greater than the num allowed by cache evict the oldest until
     // max_items == num_cached by author
+}
+
+pub fn get_cached_file_ids(cache_location: Option<String>) -> Vec<u32> {
+    let home_dir: PathBuf = dirs::home_dir().expect("Unable to find home dir while checking cache");
+    let path = Path::new(&home_dir)
+        .join(cache_location.unwrap_or_else(|| String::from(crate::cache::DEFAULT_CACHE_LOCATION)));
+
+    let mut cached_file_ids = vec![];
+    for file in fs::read_dir(&path).unwrap() {
+        cached_file_ids.push(
+            file.unwrap()
+                .path()
+                .file_stem()
+                .unwrap()
+                .to_os_string()
+                .into_string()
+                .unwrap()
+                .parse::<u32>()
+                .unwrap(),
+        );
+    }
+
+    cached_file_ids
 }
