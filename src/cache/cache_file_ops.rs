@@ -1,6 +1,13 @@
 use std::path::{Path, PathBuf};
 use std::fs;
 
+struct CachedFile {
+    author: String,
+    id: u32,
+    //TODO: probaly wanna use actually date time, (blegh)
+    published_date: String
+}
+
 /// There should only be one file returned by this function. If more than one is found the cache is
 /// in a bad state. In this case only the first is returned
 pub fn get_file_matching_basename(f_basename: &str, cache_location: &str) -> Option<String> {
@@ -37,4 +44,12 @@ pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
     }
 
     false
+}
+
+/// cleans the cache of items that do not fit the cache rule
+pub fn clean_cache() {
+    // Group items in cache by the author
+
+    // if author has items greater than the num allowed by cache evict the oldest until
+    // max_items == num_cached by author
 }
