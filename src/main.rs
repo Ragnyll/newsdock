@@ -34,7 +34,7 @@ fn main() -> Result<()> {
             open(&conf.open_url.unwrap(), "rifle", &cache_dir, query_manager)?;
         }
         CmdType::Clean => {
-            eprintln!("Cache Clean not yet implemented")
+            cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
         }
     }
 

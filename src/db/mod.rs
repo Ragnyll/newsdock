@@ -69,6 +69,12 @@ impl QueryManager {
             .url
             .clone())
     }
+
+    pub fn get_rss_item_from_id(&self, id_search: i32) -> Result<Vec<RssItem>, DbError> {
+        Ok(rss_item
+            .filter(id.eq(id_search))
+            .load::<RssItem>(&self.connection)?)
+    }
 }
 
 #[derive(Error, Debug)]
