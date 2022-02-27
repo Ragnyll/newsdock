@@ -1,6 +1,8 @@
 use crate::db::{DbError, QueryManager};
 use crate::models::RssItem;
+use crate::newsboat_utils::conf_utils;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs;
 
@@ -81,16 +83,28 @@ pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
 pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<(), DbError> {
     // Group items in cache by the author
     let cached_file_ids = get_cached_file_ids(cache_location);
-    let mut cached_rss_items = Vec::with_capacity(cached_file_ids.len());
+    // TODO: would a BTree map be better here
+    let mut cached_file_by_author: HashMap<String, Vec<CachedFile>> = HashMap::new();
 
     for fid in cached_file_ids {
         for item in query_manager.get_rss_item_from_id(fid)? {
-            cached_rss_items.push(CachedFile::new(item));
+            if !cached_file_by_author.contains_key(&item.feedurl) {
+                cached_file_by_author.insert(item.feedurl.clone(), vec![]);
+            }
+            let feedurl_cache = cached_file_by_author.get_mut(&item.feedurl).unwrap();
+            feedurl_cache.push(CachedFile::new(item));
         }
     }
 
-    // if author has items greater than the num allowed by cache evict the oldest until
-    // max_items == num_cached by author
+    // if feedurl has items greater than the num allowed by cache evict the oldest until
+    // max_items == num_cached by feedutl
+    let max_items = conf_utils::get_max_items()? as usize;
+    for mut cached_ids in cached_file_by_author {
+        while cached_ids.1.len() > max_items {
+            cached_ids.1.sort_unstable();
+            // remove files from cache and the cached_ids mem object
+        }
+    }
 
     Ok(())
 }

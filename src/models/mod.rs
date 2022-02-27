@@ -11,7 +11,7 @@ pub struct RssItem {
     pub title: String,
     pub author: String,
     pub url: String,
-    feedurl: String,
+    pub feedurl: String,
     pub pubDate: i32,
     content: String,
     unread: i32,
