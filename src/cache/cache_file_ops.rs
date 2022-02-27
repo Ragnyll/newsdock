@@ -1,13 +1,33 @@
 use crate::db::{DbError, QueryManager};
 use crate::models::RssItem;
+use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 use std::fs;
 
 /// A lighter version of RssItem to represent a cached file
-#[derive(Debug)]
+#[derive(Debug, Eq)]
 struct CachedFile {
     id: i32,
     published_date: i32,
+}
+
+/// For sorting a CachedFile by the published_date
+impl Ord for CachedFile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.published_date.cmp(&other.published_date)
+    }
+}
+
+impl PartialOrd for CachedFile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for CachedFile {
+    fn eq(&self, other: &Self) -> bool {
+        self.published_date == other.published_date
+    }
 }
 
 impl CachedFile {
