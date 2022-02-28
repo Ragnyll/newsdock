@@ -23,6 +23,7 @@ pub enum CmdType {
     Dl,
     Open,
     Clean,
+    Update,
 }
 
 /// The configuration for the newsboat utility
