@@ -1,6 +1,7 @@
 mod cli;
 
 use log::LevelFilter;
+use simple_logger::SimpleLogger;
 use std::convert::From;
 use std::str::FromStr;
 use thiserror::Error;
@@ -8,16 +9,23 @@ use thiserror::Error;
 /// builds a conf from the aggregate of configuration file arguments and cli arguments
 pub fn build_conf() -> Result<Conf, ConfError> {
     let cli_args = cli::get_cli_args();
-    LevelFilter::from_str(&cli_args.log_level)?;
 
-    Ok(Conf::from(cli_args))
+    merge_confs(None, Conf::from(cli_args))
 }
 
 // TODO
 /// Merges two confs into a single one with the second overriding the first where applicable
 #[allow(dead_code)]
-#[allow(unused_variables)]
-fn merge_confs(conf_1: Conf, conf_2: Conf) {}
+fn merge_confs(_conf_1: Option<Conf>, conf_2: Conf) -> Result<Conf, ConfError> {
+    let level = LevelFilter::from_str(&conf_2.log_level)?;
+    SimpleLogger::new()
+        .with_local_timestamps()
+        .with_level(level)
+        .init()
+        .unwrap();
+
+    Ok(conf_2)
+}
 
 pub enum CmdType {
     Dl,
@@ -46,39 +54,74 @@ impl From<cli::Cli> for Conf {
                 newsboat_urls_location,
                 skip_refresh,
                 yt_dlp_attempts,
+                cache_dir,
+                newsboat_config_location,
+                cache_db_location,
+                log_level,
             } => Self {
                 cmd_type: CmdType::Dl,
-                log_level: cli.log_level,
-                cache_dir: cli.cache_dir,
-                newsboat_config_location: cli.newsboat_config_location,
-                cache_db_location: cli.cache_db_location,
+                log_level: log_level,
+                cache_dir: cache_dir,
+                newsboat_config_location: newsboat_config_location,
+                cache_db_location: cache_db_location,
                 open_url: None,
                 newsboat_urls_location: Some(newsboat_urls_location),
                 skip_refresh: Some(skip_refresh),
                 yt_dlp_attempts: Some(yt_dlp_attempts),
             },
-            cli::Commands::Open { url } => Self {
+            cli::Commands::Open {
+                url,
+                cache_dir,
+                newsboat_config_location,
+                cache_db_location,
+                log_level,
+            } => Self {
                 cmd_type: CmdType::Open,
-                log_level: cli.log_level,
-                cache_dir: cli.cache_dir,
-                newsboat_config_location: cli.newsboat_config_location,
-                cache_db_location: cli.cache_db_location,
+                log_level: log_level,
+                cache_dir: cache_dir,
+                newsboat_config_location: newsboat_config_location,
+                cache_db_location: cache_db_location,
                 open_url: Some(url),
                 newsboat_urls_location: None,
                 skip_refresh: None,
                 yt_dlp_attempts: None,
             },
 
-            cli::Commands::Clean {} => Self {
+            cli::Commands::Clean {
+                cache_dir,
+                newsboat_config_location,
+                cache_db_location,
+                log_level,
+            } => Self {
                 cmd_type: CmdType::Clean,
-                log_level: cli.log_level,
-                cache_dir: cli.cache_dir,
-                newsboat_config_location: cli.newsboat_config_location,
-                cache_db_location: cli.cache_db_location,
+                log_level: log_level,
+                cache_dir: cache_dir,
+                newsboat_config_location: newsboat_config_location,
+                cache_db_location: cache_db_location,
                 open_url: None,
                 newsboat_urls_location: None,
                 skip_refresh: None,
                 yt_dlp_attempts: None,
+            },
+
+            cli::Commands::Update {
+                newsboat_urls_location,
+                skip_refresh,
+                yt_dlp_attempts,
+                cache_dir,
+                newsboat_config_location,
+                cache_db_location,
+                log_level,
+            } => Self {
+                cmd_type: CmdType::Dl,
+                log_level: log_level,
+                cache_dir: cache_dir,
+                newsboat_config_location: newsboat_config_location,
+                cache_db_location: cache_db_location,
+                open_url: None,
+                newsboat_urls_location: Some(newsboat_urls_location),
+                skip_refresh: Some(skip_refresh),
+                yt_dlp_attempts: Some(yt_dlp_attempts),
             },
         }
     }
