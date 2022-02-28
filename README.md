@@ -17,52 +17,16 @@ it is also required that you run newsboat once to initialize its cache db.
 
 _Installation_:
 ```
-cargo install
+cargo install --path=.
 ```
 
-## Usage
-`newsdock-dl` downloads items from the newsboat config file tagged with `cache` to the newsdock cache dir.
+Run `newsdock` for a summary of commands but you will likely use only use `newsdock update` in some sort of daemon process and `newsdock open` in newsboat.
 
+In order to use the opener in newsboat to check the cache first add the following to your newsboat config file (which is likely at `~/.config/newsboat/config`):
 ```
-newsdock 0.1.0
-A utility for downloading rss_items onto local storage
-
-USAGE:
-    newsdock-dl [OPTIONS]
-
-OPTIONS:
-        --cache-db-location <CACHE_DB_LOCATION>
-            An opitonal override for the location where newsboats db is stored relative to the
-            home_dir defaults to "/.local/share/newsboat/cache.db" [default:
-            .local/share/newsboat/cache.db]
-
-        --cache-dir <CACHE_DIR>
-            An optional location for the default cache directory [default: .cache/newsdock/]
-
-    -h, --help
-            Print help information
-
-        --log-level <LOG_LEVEL>
-            [default: error]
-
-        --newsboat-config-location <NEWSBOAT_CONFIG_LOCATION>
-            An optional override for the location where the newsboat urls file is stored relative to
-            the home dir [default: .config/newsboat/config]
-
-        --newsboat-urls-location <NEWSBOAT_URLS_LOCATION>
-            An optional override for the location where the newsboat urls file is stored relative to
-            the home dir [default: .config/newsboat/urls]
-
-        --skip-refresh
-            skips the refresh on the newsboatdb
-
-    -V, --version
-            Print version information
-
-        --yt-dlp-attempts <YT_DLP_ATTEMPTS>
-            The amount of times to retry downloads from youtube [default: 20]
-
+browser "newsdock open %u"
 ```
+
 
 ## How it works
 ![newsdock erd](assets/newsdock_erd.png)
