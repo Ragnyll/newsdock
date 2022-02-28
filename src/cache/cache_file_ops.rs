@@ -5,6 +5,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs;
+use thiserror::Error;
 
 /// A lighter version of RssItem to represent a cached file
 #[derive(Debug, Eq)]
@@ -80,7 +81,33 @@ pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
 }
 
 /// cleans the cache of items that do not fit the cache rule
-pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<(), DbError> {
+pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<(), CacheError> {
+    let cached_file_by_feed = get_cached_file_by_feed(cache_location, query_manager)?;
+    // if feedurl has items greater than the num allowed by cache evict the oldest until
+    // max_items == num_cached by feedutl
+    let max_items = conf_utils::get_max_items()? as usize;
+    for mut cached_ids in cached_file_by_feed {
+        cached_ids.1.sort_unstable();
+        cached_ids.1.reverse();
+        while cached_ids.1.len() > max_items {
+            // remove files from cache and the cached_ids mem object
+            let file_to_remove = get_file_matching_basename(
+                &cached_ids.1.pop().unwrap().id.to_string(),
+                cache_location,
+            )
+            .unwrap();
+            log::info!("removing {file_to_remove}");
+            fs::remove_file(file_to_remove)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn get_cached_file_by_feed(
+    cache_location: &str,
+    query_manager: QueryManager,
+) -> Result<HashMap<String, Vec<CachedFile>>, CacheError> {
     // Group items in cache by the author
     let cached_file_ids = get_cached_file_ids(cache_location);
     // TODO: would a BTree map be better here
@@ -96,17 +123,7 @@ pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<
         }
     }
 
-    // if feedurl has items greater than the num allowed by cache evict the oldest until
-    // max_items == num_cached by feedutl
-    let max_items = conf_utils::get_max_items()? as usize;
-    for mut cached_ids in cached_file_by_author {
-        while cached_ids.1.len() > max_items {
-            cached_ids.1.sort_unstable();
-            // remove files from cache and the cached_ids mem object
-        }
-    }
-
-    Ok(())
+    Ok(cached_file_by_author)
 }
 
 pub fn get_cached_file_ids(cache_location: &str) -> Vec<i32> {
@@ -129,4 +146,14 @@ pub fn get_cached_file_ids(cache_location: &str) -> Vec<i32> {
     }
 
     cached_file_ids
+}
+
+#[derive(Error, Debug)]
+pub enum CacheError {
+    #[error("Unable to query db")]
+    QueryError(#[from] DbError),
+    #[error("Unable to delete cached file")]
+    CacheRemoveError(#[from] std::io::Error),
+    #[error("Invalid newsboat conf file")]
+    ConfError(#[from] conf_utils::NewsboatConfigError),
 }
