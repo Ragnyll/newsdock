@@ -49,7 +49,7 @@ fn main() -> Result<()> {
             log::info!("Evicting old cache items");
             let query_manager = QueryManager::new(&db_location)?;
             cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
-        },
+        }
         CmdType::Clean => {
             cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
         }

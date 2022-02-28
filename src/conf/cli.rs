@@ -6,7 +6,6 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[clap(subcommand)]
     pub command: Commands,
-
 }
 
 #[derive(Subcommand, Debug)]
@@ -34,7 +33,6 @@ pub enum Commands {
         /// log level allowed values are info, error, trace
         #[clap(long, default_value = "error")]
         log_level: String,
-
     },
 
     /// Updates the cache with all the items to download
