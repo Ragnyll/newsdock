@@ -50,24 +50,24 @@ pub fn get_feed_urls_tags() -> Result<Vec<FeedTags>, NewsboatConfigError> {
     Ok(feed_tags)
 }
 
-/// retrieves the browser set by the browser conf option in the newsboat config
-pub fn get_browser() -> Result<Option<String>, NewsboatConfigError> {
+/// retrieves the max items from the newsboat conf
+pub fn get_max_items() -> Result<u32, NewsboatConfigError> {
     let home_dir = find_home_dir()?;
     let conf_path = format!("{}/{}", home_dir, DEFAULT_NEWSBOAT_CONF_PATH);
     let file = File::open(conf_path)?;
     let reader = BufReader::new(file);
 
+    let mut max_items = 0;
     for line in reader.lines() {
         let line = line?;
         // ignore comment lines that start with `#` or are empty
-        if line.starts_with("browser ") {
+        if !line.starts_with('#') && line.contains("max-items") {
             let split: Vec<String> = line.split(' ').map(String::from).collect();
-            let browser = split[1].clone();
-            return Ok(Some(browser));
+            max_items = split[1].parse::<u32>()?;
         }
     }
 
-    Ok(None)
+    Ok(max_items)
 }
 
 /// Finds the home directory or errors in the process
@@ -91,4 +91,6 @@ pub enum NewsboatConfigError {
     HomePathError,
     #[error("Unable to read a newsboat config file")]
     NewsboatReadError(#[from] std::io::Error),
+    #[error("Unable to read a newsboat config file")]
+    NewsboatMaxItemsError(#[from] std::num::ParseIntError),
 }
