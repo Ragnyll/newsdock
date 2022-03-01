@@ -6,6 +6,7 @@ use newsdock::db::{DbError, LockedQueryManager, QueryManager};
 use newsdock::fs;
 use newsdock::newsboat_utils::bin_utils;
 use newsdock::opener;
+use std::sync::{Arc, Mutex};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,45 +16,46 @@ async fn main() -> Result<()> {
     let newsboat_config_location = fs::get_file_location_or_abort(&conf.newsboat_config_location)?;
     let cache_dir = fs::get_dir_or_create(&conf.cache_dir)?;
 
-    let query_manager = QueryManager::new(&db_location)?;
+    let query_manager = Arc::new(Mutex::new(QueryManager::new(&db_location)?));
 
     match conf.cmd_type {
-        CmdType::Dl => {
-            let newsboat_urls_location =
-                fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
-            download(
-                conf.skip_refresh.unwrap(),
-                &db_location,
-                &newsboat_urls_location,
-                &newsboat_config_location,
-                &cache_dir,
-                conf.yt_dlp_attempts.unwrap(),
-                query_manager,
-            )?;
-        }
+        // CmdType::Dl => {
+            // let newsboat_urls_location =
+                // fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
+            // download(
+                // conf.skip_refresh.unwrap(),
+                // &db_location,
+                // &newsboat_urls_location,
+                // &newsboat_config_location,
+                // &cache_dir,
+                // conf.yt_dlp_attempts.unwrap(),
+                // query_manager,
+            // )?;
+        // },
         CmdType::Open => {
             open(&conf.open_url.unwrap(), "rifle", &cache_dir, query_manager)?;
-        }
-        CmdType::Update => {
-            log::info!("Downloading new cache items");
-            let newsboat_urls_location =
-                fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
-            download(
-                conf.skip_refresh.unwrap(),
-                &db_location,
-                &newsboat_urls_location,
-                &newsboat_config_location,
-                &cache_dir,
-                conf.yt_dlp_attempts.unwrap(),
-                query_manager,
-            )?;
-            log::info!("Evicting old cache items");
-            let query_manager = QueryManager::new(&db_location)?;
-            cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
-        }
-        CmdType::Clean => {
-            cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
-        }
+        },
+        _ => (),
+        // CmdType::Update => {
+            // log::info!("Downloading new cache items");
+            // let newsboat_urls_location =
+                // fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
+            // download(
+                // conf.skip_refresh.unwrap(),
+                // &db_location,
+                // &newsboat_urls_location,
+                // &newsboat_config_location,
+                // &cache_dir,
+                // conf.yt_dlp_attempts.unwrap(),
+                // query_manager,
+            // )?;
+            // log::info!("Evicting old cache items");
+            // let query_manager = QueryManager::new(&db_location)?;
+            // cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
+        // }
+        // CmdType::Clean => {
+            // cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
+        // }
     }
 
     Ok(())
@@ -63,7 +65,7 @@ fn open(
     url: &str,
     opener_bin: &str,
     cache_dir: &str,
-    query_manager: QueryManager,
+    query_manager: LockedQueryManager,
 ) -> Result<(), opener::OpenerError> {
     opener::open(
         url,

@@ -1,6 +1,6 @@
 use crate::cache;
 use crate::newsboat_utils::conf_utils;
-use crate::db::{DbError, QueryManager};
+use crate::db::{DbError, LockedQueryManager};
 use std::process::Command;
 use thiserror::Error;
 
@@ -13,8 +13,10 @@ pub fn open(
     url: &str,
     file_opener_program: Option<String>,
     cache_location: Option<String>,
-    query_manager: QueryManager,
+    query_manager: LockedQueryManager,
 ) -> Result<(), OpenerError> {
+    let query_manager = query_manager.lock().unwrap();
+
     log::info!("converting url {url} to id");
     let id = query_manager.get_id_from_url(url)?;
     let cache_location =
