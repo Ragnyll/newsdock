@@ -2,12 +2,13 @@ use anyhow::Result;
 use newsdock::cache;
 use newsdock::conf;
 use newsdock::conf::CmdType;
-use newsdock::db::{DbError, QueryManager};
+use newsdock::db::{DbError, LockedQueryManager, QueryManager};
 use newsdock::fs;
 use newsdock::newsboat_utils::bin_utils;
 use newsdock::opener;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let conf = conf::build_conf().unwrap();
 
     let db_location = fs::get_file_location_or_abort(&conf.cache_db_location)?;

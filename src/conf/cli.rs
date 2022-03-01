@@ -16,7 +16,11 @@ pub enum Commands {
         /// The url to download
         url: String,
 
-        /// An optional location for the default cache directory
+        /// The program to use as the file opener defaults to xdg-open
+        #[clap(long, default_value = "xdg-open")]
+        opener: String,
+
+       /// An optional location for the default cache directory
         #[clap(long, default_value = ".cache/newsdock/")]
         cache_dir: String,
 

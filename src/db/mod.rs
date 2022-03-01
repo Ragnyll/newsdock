@@ -2,9 +2,12 @@ use diesel::prelude::*;
 use crate::models::RssItem;
 use crate::models::schema::rss_item::dsl::*;
 use crate::newsboat_utils::conf_utils;
+use std::sync::{Arc, Mutex};
 use thiserror::Error;
 
 const CACHE_TAG: &str = "cache";
+
+pub type LockedQueryManager = Arc<Mutex<QueryManager>>;
 
 /// Maintains the Database connection and runs canned queries
 pub struct QueryManager {
