@@ -58,7 +58,11 @@ fn open_from_cache(
 }
 
 fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
-    Command::new(RIFLE).arg(path).output().unwrap();
+    let output = Command::new(RIFLE).arg(path).output().unwrap();
+    if !output.stderr.is_empty() {
+        return Err(OpenerError::UnableToOpen);
+    }
+
     Ok(())
 }
 
@@ -67,7 +71,12 @@ fn open_with_browser(url: &str) -> Result<(), OpenerError> {
     let browser = determine_browser()?;
     log::info!("using browser: {browser} to open url: {url}");
 
-    Command::new(browser).arg(url).output().unwrap();
+    let output = Command::new(browser).arg(url).output().unwrap();
+
+    if !output.stderr.is_empty() {
+        return Err(OpenerError::UnableToOpen);
+    }
+
     Ok(())
 }
 
@@ -82,10 +91,14 @@ fn determine_browser() -> Result<String, OpenerError> {
 
 fn open_from_cache_with_system_default(path: &str) -> Result<(), OpenerError> {
     // check for file matching str id
-    Command::new(DEFAULT_LINUX_OPENER)
+    let output = Command::new(DEFAULT_LINUX_OPENER)
         .arg(path)
         .output()
         .unwrap();
+
+    if !output.stderr.is_empty() {
+        return Err(OpenerError::UnableToOpen);
+    }
 
     Ok(())
 }

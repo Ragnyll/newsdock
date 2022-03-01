@@ -74,7 +74,7 @@ fn download_youtube(
     num_retries: u32,
 ) -> Result<(), DownloadError> {
     let download_output_path = Path::new(output_base_path).join(&rss_item.id.to_string());
-    Command::new("yt-dlp")
+    let output = Command::new("yt-dlp")
         .arg(&rss_item.url)
         .arg("--retries")
         .arg(num_retries.to_string())
@@ -82,6 +82,10 @@ fn download_youtube(
         .arg(download_output_path)
         .output()
         .unwrap();
+
+    if !output.stderr.is_empty() {
+        return Err(DownloadError::DownloadError);
+    }
 
     Ok(())
 }
