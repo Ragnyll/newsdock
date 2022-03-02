@@ -1,7 +1,13 @@
-# Newsdock
-A process to pre-cache certain files for newsboat so that can be viewed locally without an internet connection.
+![logo](./assets/newsdock_logo.png)
 
-NOTE: This project has not yet reached its MVP stage. Feel free to contribute, or track [the downloader project until it is ready](https://github.com/Ragnyll/newsdock/projects/1)
+A process to cache unread rss content as files for [newsboat](https://newsboat.org/) for offline viewing.
+
+**Current Project State**: This project is in its alpha stage. That means it works in my basic usage with the options that have been provided.
+ Any other functionality can be prioritized based off any user feedback or if I decide I need it.
+
+## Demo
+
+![demo](./assets/demo.gif)
 
 ## Install Instructions
 
@@ -11,12 +17,14 @@ Download the prerequisite from your operating system's respective package manage
 ```
 newsboat
 youtube-dl
+rifle
 ```
 
-it is also required that you run newsboat once to initialize its cache db.
+It is also required that you run newsboat once to initialize its cache db.
 
 _Installation_:
 ```
+cd newsdock
 cargo install --path=.
 ```
 
@@ -24,15 +32,17 @@ Run `newsdock` for a summary of commands but you will likely use only use `newsd
 
 In order to use the opener in newsboat to check the cache first add the following to your newsboat config file (which is likely at `~/.config/newsboat/config`):
 ```
-browser "newsdock open %u"
+browser "newsdock open %u --opener"
 ```
 
+In your newsboat urls (default in `~/.config/newsboat/urls`) file you will need to add the cache tag for any feeds you wish to cache.
+```
+# Youtube subscriptions
+## Rust
+https://www.youtube.com/feeds/videos.xml?channel_id=UCaYhcUwRBNscFNUKTjgPFiA youtube programming rust cache
+```
 
-## How it works
-![newsdock erd](assets/newsdock_erd.png)
-
-The `newsdock_downloader` looks for all rss_items that have the tag: `cache` and attempts to download them from the corresponding `external service` if there is a valid `cache_protocol` defined.
-
-The `newsdock_opener` looks for a file matching the `rss_item` in the `cache_dir`.
- If the file is not in the cache it will fall back to the default newsboat opening program.
-
+Now that everything is configured try it out:
+1. Run `newsdock update`
+1. Run `newsboat`
+1. Open something that's been cached.
