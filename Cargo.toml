@@ -7,6 +7,7 @@ rust-version = "1.58"
 [dependencies]
 anyhow = "1"
 clap = { version = "3", features = ["derive"] }
+chrono = "0.4"
 diesel = { version = "1", features = ["sqlite"] }
 dirs = "4"
 exitcode = "1"
@@ -15,6 +16,7 @@ readonly = "0.2"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 serde = "1"
 serde_derive = "1"
-simple_logger = "2"
+simple_logger = { version = "2", features  = ["timestamps"] }
 thiserror = "1"
+time = "0.3"
 tokio = { version = "1", features = ["full"] }

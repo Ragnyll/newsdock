@@ -19,7 +19,7 @@ pub fn build_conf() -> Result<Conf, ConfError> {
 fn merge_confs(_conf_1: Option<Conf>, conf_2: Conf) -> Result<Conf, ConfError> {
     let level = LevelFilter::from_str(&conf_2.log_level)?;
     SimpleLogger::new()
-        .with_local_timestamps()
+        .with_utc_offset(time::UtcOffset::UTC)
         .with_level(level)
         .init()
         .unwrap();

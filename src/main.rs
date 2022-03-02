@@ -19,43 +19,42 @@ async fn main() -> Result<()> {
     let query_manager = Arc::new(Mutex::new(QueryManager::new(&db_location)?));
 
     match conf.cmd_type {
-        // CmdType::Dl => {
-            // let newsboat_urls_location =
-                // fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
-            // download(
-                // conf.skip_refresh.unwrap(),
-                // &db_location,
-                // &newsboat_urls_location,
-                // &newsboat_config_location,
-                // &cache_dir,
-                // conf.yt_dlp_attempts.unwrap(),
-                // query_manager,
-            // )?;
-        // },
-        CmdType::Open => {
-            open(&conf.open_url.unwrap(), "rifle", &cache_dir, query_manager)?;
+        CmdType::Dl => {
+            let newsboat_urls_location =
+                fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
+            download(
+                conf.skip_refresh.unwrap(),
+                &db_location,
+                &newsboat_urls_location,
+                &newsboat_config_location,
+                &cache_dir,
+                conf.yt_dlp_attempts.unwrap(),
+                query_manager,
+            )?;
         },
-        _ => (),
-        // CmdType::Update => {
-            // log::info!("Downloading new cache items");
-            // let newsboat_urls_location =
-                // fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
-            // download(
-                // conf.skip_refresh.unwrap(),
-                // &db_location,
-                // &newsboat_urls_location,
-                // &newsboat_config_location,
-                // &cache_dir,
-                // conf.yt_dlp_attempts.unwrap(),
-                // query_manager,
-            // )?;
-            // log::info!("Evicting old cache items");
-            // let query_manager = QueryManager::new(&db_location)?;
-            // cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
-        // }
-        // CmdType::Clean => {
-            // cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
-        // }
+        CmdType::Open => {
+            open(&conf.open_url.unwrap(), &conf.opener.unwrap(), &cache_dir, query_manager)?;
+        },
+        CmdType::Update => {
+            log::info!("Downloading new cache items");
+            let newsboat_urls_location =
+                fs::get_file_location_or_abort(&conf.newsboat_urls_location.unwrap())?;
+            download(
+                conf.skip_refresh.unwrap(),
+                &db_location,
+                &newsboat_urls_location,
+                &newsboat_config_location,
+                &cache_dir,
+                conf.yt_dlp_attempts.unwrap(),
+                query_manager,
+            )?;
+            log::info!("Evicting old cache items");
+            let query_manager = Arc::new(Mutex::new(QueryManager::new(&db_location)?));
+            cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
+        }
+        CmdType::Clean => {
+            cache::cache_file_ops::clean_cache(&cache_dir, query_manager)?;
+        }
     }
 
     Ok(())
@@ -82,8 +81,9 @@ fn download(
     newsboat_config_location: &str,
     cache_dir: &str,
     yt_dlp_attempts: u32,
-    query_manager: QueryManager,
+    query_manager: LockedQueryManager,
 ) -> Result<(), DbError> {
+
     if !skip_refresh {
         match bin_utils::reload_feed_items(
             db_location,
@@ -95,7 +95,8 @@ fn download(
         };
     }
 
-    let item_urls = query_manager.get_all_cacheable_feed_items()?;
+    let query_manager = query_manager.lock().unwrap();
+    let item_urls = &query_manager.get_all_cacheable_feed_items()?;
 
     for item in item_urls {
         match cache::downloader::poll_cache(&item, Some(String::from(cache_dir)), yt_dlp_attempts) {

@@ -1,4 +1,4 @@
-use crate::db::{DbError, QueryManager};
+use crate::db::{DbError, LockedQueryManager};
 use crate::models::RssItem;
 use crate::newsboat_utils::conf_utils;
 use std::cmp::Ordering;
@@ -81,7 +81,7 @@ pub fn check_cache(f_basename: &str, cache_location: Option<String>) -> bool {
 }
 
 /// cleans the cache of items that do not fit the cache rule
-pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<(), CacheError> {
+pub fn clean_cache(cache_location: &str, query_manager: LockedQueryManager) -> Result<(), CacheError> {
     let cached_file_by_feed = get_cached_file_by_feed(cache_location, query_manager)?;
     // if feedurl has items greater than the num allowed by cache evict the oldest until
     // max_items == num_cached by feedutl
@@ -106,13 +106,14 @@ pub fn clean_cache(cache_location: &str, query_manager: QueryManager) -> Result<
 
 fn get_cached_file_by_feed(
     cache_location: &str,
-    query_manager: QueryManager,
+    query_manager: LockedQueryManager,
 ) -> Result<HashMap<String, Vec<CachedFile>>, CacheError> {
     // Group items in cache by the author
     let cached_file_ids = get_cached_file_ids(cache_location);
     // TODO: would a BTree map be better here
     let mut cached_file_by_author: HashMap<String, Vec<CachedFile>> = HashMap::new();
 
+    let query_manager = query_manager.lock().unwrap();
     for fid in cached_file_ids {
         for item in query_manager.get_rss_item_from_id(fid)? {
             if !cached_file_by_author.contains_key(&item.feedurl) {

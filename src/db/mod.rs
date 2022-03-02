@@ -23,7 +23,7 @@ impl QueryManager {
     }
 
     /// Returns all RssItem(s) that have the cache tag
-    pub fn get_all_cacheable_feed_items(self) -> Result<Vec<RssItem>, DbError> {
+    pub fn get_all_cacheable_feed_items(&self) -> Result<Vec<RssItem>, DbError> {
         let mut cacheable_feed_urls: Vec<String> = vec![];
 
         for url_conf in conf_utils::get_feed_urls_tags()?.into_iter() {
