@@ -32,7 +32,7 @@ Run `newsdock` for a summary of commands but you will likely use only use `newsd
 
 In order to use the opener in newsboat to check the cache first add the following to your newsboat config file (which is likely at `~/.config/newsboat/config`):
 ```
-browser "newsdock open %u --opener"
+browser "newsdock open %u"
 ```
 
 In your newsboat urls (default in `~/.config/newsboat/urls`) file you will need to add the cache tag for any feeds you wish to cache.
