@@ -4,6 +4,7 @@ A process to cache unread rss content as files for [newsboat](https://newsboat.o
 
 **Current Project State**: This project is in its alpha stage. That means it works in my basic usage with the options that have been provided.
  Any other functionality can be prioritized based off any user feedback or if I decide I need it.
+ It has been tested on Arch Linux x64.
 
 ## Demo
 
