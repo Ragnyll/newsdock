@@ -16,6 +16,10 @@ pub enum Commands {
         /// The url to download
         url: String,
 
+        /// A tool top open video streaming urls with when it is not cached
+        #[clap(long)]
+        video_streamer: Option<String>,
+
         /// An optional location for the default cache directory
         #[clap(long, default_value = ".cache/newsdock/")]
         cache_dir: String,

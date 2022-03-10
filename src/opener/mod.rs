@@ -14,6 +14,7 @@ pub fn open(
     file_opener_program: Option<String>,
     cache_location: Option<String>,
     query_manager: QueryManager,
+    video_streamer: Option<String>,
 ) -> Result<(), OpenerError> {
     log::info!("converting url {url} to id");
     let id = query_manager.get_id_from_url(url)?;
@@ -25,7 +26,7 @@ pub fn open(
         open_from_cache(&id, file_opener_program, &cache_location)
     } else {
         log::info!("opening with browser");
-        open_with_browser(url)
+        open_with_browser(url, video_streamer)
     }
 }
 
@@ -67,9 +68,19 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 }
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
-fn open_with_browser(url: &str) -> Result<(), OpenerError> {
+fn open_with_browser(url: &str, video_streamer: Option<String>) -> Result<(), OpenerError> {
     let browser = determine_browser()?;
     log::info!("using browser: {browser} to open url: {url}");
+
+    if let Some(vs) = video_streamer {
+        let output = Command::new(vs).arg(url).output().unwrap();
+
+        if !output.stderr.is_empty() {
+            return Err(OpenerError::UnableToOpen);
+        }
+
+        return Ok(());
+    }
 
     let output = Command::new(browser).arg(url).output().unwrap();
 

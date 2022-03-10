@@ -31,7 +31,13 @@ fn main() -> Result<()> {
             )?;
         }
         CmdType::Open => {
-            open(&conf.open_url.unwrap(), "rifle", &cache_dir, query_manager)?;
+            open(
+                &conf.open_url.unwrap(),
+                conf.video_streamer,
+                "rifle",
+                &cache_dir,
+                query_manager,
+            )?;
         }
         CmdType::Update => {
             log::info!("Downloading new cache items");
@@ -60,6 +66,7 @@ fn main() -> Result<()> {
 
 fn open(
     url: &str,
+    video_streamer: Option<String>,
     opener_bin: &str,
     cache_dir: &str,
     query_manager: QueryManager,
@@ -69,6 +76,7 @@ fn open(
         Some(String::from(opener_bin)),
         Some(String::from(cache_dir)),
         query_manager,
+        video_streamer,
     )
 }
 
