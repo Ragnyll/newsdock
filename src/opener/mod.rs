@@ -69,18 +69,21 @@ fn open_from_cache_with_rifle(path: &str) -> Result<(), OpenerError> {
 
 /// Opens the file with the newsboat browser or the system "BROWSER" env var if not provided
 fn open_with_browser(url: &str, video_streamer: Option<String>) -> Result<(), OpenerError> {
+    if url.contains("https://www.youtube.com") {
+        if let Some(vs) = video_streamer {
+            log::info!("using video_streamer: {vs} to stream url: {url}");
+            let output = Command::new(vs).arg(url).output().unwrap();
+
+            if !output.stderr.is_empty() {
+                return Err(OpenerError::UnableToOpen);
+            }
+
+            return Ok(());
+        }
+    }
+
     let browser = determine_browser()?;
     log::info!("using browser: {browser} to open url: {url}");
-
-    if let Some(vs) = video_streamer {
-        let output = Command::new(vs).arg(url).output().unwrap();
-
-        if !output.stderr.is_empty() {
-            return Err(OpenerError::UnableToOpen);
-        }
-
-        return Ok(());
-    }
 
     let output = Command::new(browser).arg(url).output().unwrap();
 
